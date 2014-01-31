@@ -114,7 +114,6 @@ class SteadyStateSolver:
     rhs = self.a + self.oldH/self.dt
     # no boundary conditions should be necessary -- ux H = a at the ice divide
     newH = linalg.solve(M,rhs)
-
     
     newHx = numpy.dot(Dx,newH)
     if(self.plot):
@@ -123,7 +122,6 @@ class SteadyStateSolver:
       ax = plt.subplot(2,3,5)
       ax.cla()
       plt.plot(x,newH-self.oldH, 'b')
-      plt.title('xg=%f'%xg)
       ax = plt.subplot(2,3,6)
       ax.cla()
       plt.plot(x,(newH-self.oldH)/self.dt, 'b', x,-sigma*dxg_dt*newHx, 'r', 
