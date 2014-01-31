@@ -282,9 +282,9 @@ for outer in range(maxSteps):
     
     if(solver.plot):
       ax = plt.subplot(2,3,1)
-      plt.title('iter: %02i inner tol.: %.4g'%(inner, toleranceInner))
+      plt.title('iter: %02i dt=%.4g'%(inner, solver.dt))
       ax = plt.subplot(2,3,2)
-      plt.title('dt=%.4g'%(solver.dt))
+      plt.title('diffU: %.4g tol.: %.4g'%(diffU, toleranceInner))
       ax = plt.subplot(2,3,3)
       plt.title('CFL=%.2f'%cfl)
       ax = plt.subplot(2,3,4)

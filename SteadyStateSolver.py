@@ -238,7 +238,7 @@ class SteadyStateSolver:
       plt.plot(x,H-b, 'r', x, -b, 'k', x, Hf-b, 'g',oldX,self.oldH-oldB,'b')
       ax = plt.subplot(2,3,2)
       ax.cla()
-      plt.plot(x,solver_res,'b', x, residual, 'r',
+      plt.plot(x[1:-1],solver_res[1:-1],'b', x[1:-1], residual[1:-1], 'r',
                x[1:-1], residual_check[1:-1], 'k--')
       ax = plt.subplot(2,3,3)
       ax.cla()
