@@ -281,18 +281,20 @@ for outer in range(maxSteps):
     print "time: ", solver.time+solver.dt, "iter: ", inner, "cfl:", cfl, "diffs: ", diffH, diffXg, diffU, solver.resStress
     
     if(solver.plot):
+      dH_dt = (newH-solver.oldH)/solver.dt
+      dH_dt = numpy.amax(numpy.abs(dH_dt))
       ax = plt.subplot(2,3,1)
       plt.title('iter: %02i dt=%.4g'%(inner, solver.dt))
       ax = plt.subplot(2,3,2)
-      plt.title('diffU: %.4g tol.: %.4g'%(diffU, toleranceInner))
-      ax = plt.subplot(2,3,3)
       plt.title('CFL=%.2f'%cfl)
+      ax = plt.subplot(2,3,3)
+      plt.title('diffU: %.4g tol.: %.4g'%(diffU, toleranceInner))
       ax = plt.subplot(2,3,4)
       plt.title('xg=%.4f'%(newXg))
       ax = plt.subplot(2,3,5)
       plt.title('dxg/dt=%.4f'%(dxg_dt))
       ax = plt.subplot(2,3,6)
-      plt.title('|dH/dt|_max=%.4f'%(diffH))
+      plt.title('|dH/dt|_max=%.4f'%(dH_dt))
       if(solver.plotContinuous):
         plt.draw()
       else:
