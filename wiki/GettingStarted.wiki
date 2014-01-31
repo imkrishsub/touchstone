@@ -8,4 +8,4 @@ Run `python main.py --help` to see what parameters are available.
 
 Example scripts for running the code and for submitting several runs to be performed in parallel can be found in the `scripts` directory.
 
-The code is a revised version of that described in [http://www.the-cryosphere-discuss.net/8/363/2014/tcd-8-363-2014.html Leguy et al. 2014].
+The code is a revised version of the Cheybshev code described in the appendix of [http://www.the-cryosphere-discuss.net/8/363/2014/tcd-8-363-2014.html Leguy et al. 2014].
