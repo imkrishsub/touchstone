@@ -281,6 +281,18 @@ for outer in range(maxSteps):
     print "time: ", solver.time+solver.dt, "iter: ", inner, "cfl:", cfl, "diffs: ", diffH, diffXg, diffU, solver.resStress
     
     if(solver.plot):
+      ax = plt.subplot(2,3,1)
+      plt.title('inner tol.: %.4g'%(toleranceInner))
+      ax = plt.subplot(2,3,2)
+      plt.title('dt=%.4g'%(solver.dt))
+      ax = plt.subplot(2,3,3)
+      plt.title('CFL=%.2f'%cfl)
+      ax = plt.subplot(2,3,4)
+      plt.title('xg=%.4f'%(newXg))
+      ax = plt.subplot(2,3,5)
+      plt.title('dxg/dt=%.4f'%(dxg_dt))
+      ax = plt.subplot(2,3,6)
+      plt.title('|dH/dt|_max=%.4f'%(diffH))
       if(solver.plotContinuous):
         plt.draw()
       else:
