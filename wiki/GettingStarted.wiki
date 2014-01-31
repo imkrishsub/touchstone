@@ -1,0 +1,5 @@
+#summary What one needs to get started using the code
+
+= Getting Started =
+
+To make use of the code, the user will need to download `chebtran.py` from the [http://www.scientificpython.net/1/post/2012/05/fast-chebyshev-transforms-revisited.html Scientific Python Blog]
