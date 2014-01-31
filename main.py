@@ -282,7 +282,7 @@ for outer in range(maxSteps):
     
     if(solver.plot):
       ax = plt.subplot(2,3,1)
-      plt.title('inner tol.: %.4g'%(toleranceInner))
+      plt.title('iter: %02i inner tol.: %.4g'%(inner, toleranceInner))
       ax = plt.subplot(2,3,2)
       plt.title('dt=%.4g'%(solver.dt))
       ax = plt.subplot(2,3,3)
