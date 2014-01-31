@@ -7,3 +7,5 @@ To make use of the code, the user will need to download `chebtran.py` from the [
 Run `python main.py --help` to see what parameters are available.
 
 Example scripts for running the code and for submitting several runs to be performed in parallel can be found in the `scripts` directory.
+
+The code is a revised version of that described in [http://www.the-cryosphere-discuss.net/8/363/2014/tcd-8-363-2014.html Leguy et al. 2014].
