@@ -244,11 +244,12 @@ deltaX = numpy.zeros(solver.cheb.x.shape)
 deltaX[0:(Nx+1)/2] = solver.cheb.x[1:(Nx+3)/2]-solver.cheb.x[0:(Nx+1)/2]
 deltaX[(Nx+1)/2:] = solver.cheb.x[(Nx+1)/2:]-solver.cheb.x[(Nx-1)/2:-1]
 
-
 toleranceInner = maxToleranceInner
 for outer in range(maxSteps):
   solver.oldH = solver.H
   solver.oldXg = solver.xg
+  solver.oldU = solver.u
+  
   
   innerConverged = False
   
@@ -282,6 +283,10 @@ for outer in range(maxSteps):
     
     if(solver.plot):
       dH_dt = (newH-solver.oldH)/solver.dt
+
+      ax = plt.subplot(2,3,5)
+      plt.plot(solver.cheb.x*solver.xg,solver.u-solver.oldU, 'r')
+
       dH_dt = numpy.amax(numpy.abs(dH_dt))
       ax = plt.subplot(2,3,1)
       plt.title('iter: %02i dt=%.4g'%(inner, solver.dt))
@@ -327,7 +332,7 @@ for outer in range(maxSteps):
 
   print "time: ", solver.time, "|dH_dt|_max: ", diffH, "dxg_dt:", dxg_dt, "dt: ", solver.dt, "inner tol.:", toleranceInner
   solver.updateH(newH,newXg)
-    
+  
   if(numpy.mod(outer,stepsPerWrite) == stepsPerWrite-1):
     writeResults(outFile, solver)
   
