@@ -39,7 +39,7 @@ mkdir -p vary_C
 cd vary_C
 C_CFL=50
 for C in 7.624e8 3.812e8 7.624e7 7.624e6 7.624e5 3.812e5 2.541e5 1.906e5 \
-  1.525e5 7.624e4 3.812e4
+  1.525e5 7.624e4 #3.812e4
 do
   prefix=C_$C
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$C_CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
@@ -62,7 +62,7 @@ cd vary_lambda_0
 for lambda_0 in 3.125e-2 6.250e-2 2.500e-1 5.000e-1 1.000e+0 2.000e+0 \
   4.000e+0 8.000e+0 1.600e+1 6.400e+1 1.280e+2
 do
-  prefix=lambda_0$lambda_0
+  prefix=lambda_0_$lambda_0
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_0 --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
   $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
 done
