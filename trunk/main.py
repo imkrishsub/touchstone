@@ -247,7 +247,7 @@ deltaX[(Nx+1)/2:] = solver.cheb.x[(Nx+1)/2:]-solver.cheb.x[(Nx-1)/2:-1]
 
 prev_dH_dt = numpy.zeros(solver.H.shape)
 prev_du_dt = numpy.zeros(solver.u.shape)
-prev_dxg_dt = 0.
+#prev_dxg_dt = 0.
 
 toleranceInner = maxToleranceInner
 for outer in range(maxSteps):
@@ -259,10 +259,10 @@ for outer in range(maxSteps):
   innerConverged = False
   
   # initial guess is that du/dt will be the same over this step
-  if outer > 5:
-    solver.u += solver.dt*prev_du_dt
-    solver.ux = numpy.dot(solver.cheb.Dx/solver.xg,solver.u)
-    solver.xg += solver.dt*prev_dxg_dt
+#  if outer > 5:
+#    solver.u += solver.dt*prev_du_dt
+#    solver.ux = numpy.dot(solver.cheb.Dx/solver.xg,solver.u)
+#    solver.xg += solver.dt*prev_dxg_dt
   
   newH = solver.iterateImplicitTimeStep()
   newXg = solver.newtonStepXg(newH)
@@ -334,7 +334,8 @@ for outer in range(maxSteps):
   prev_dH_dt = dH_dt
   prev_du_dt = (solver.u-solver.oldU)/solver.dt
   dxg_dt = (newXg-solver.oldXg)/solver.dt
-  prev_dxg_dt = dxg_dt
+  #prev_dxg_dt = dxg_dt
+  #print "prev_dxg_dt:", prev_dxg_dt
   diffH = numpy.amax(numpy.abs(dH_dt))
   diffXg = numpy.abs(dxg_dt)
   solver.time += solver.dt
