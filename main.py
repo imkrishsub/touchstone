@@ -244,6 +244,11 @@ deltaX = numpy.zeros(solver.cheb.x.shape)
 deltaX[0:(Nx+1)/2] = solver.cheb.x[1:(Nx+3)/2]-solver.cheb.x[0:(Nx+1)/2]
 deltaX[(Nx+1)/2:] = solver.cheb.x[(Nx+1)/2:]-solver.cheb.x[(Nx-1)/2:-1]
 
+
+prev_dH_dt = numpy.zeros(solver.H.shape)
+prev_du_dt = numpy.zeros(solver.u.shape)
+prev_dxg_dt = 0.
+
 toleranceInner = maxToleranceInner
 for outer in range(maxSteps):
   solver.oldH = solver.H
@@ -252,6 +257,12 @@ for outer in range(maxSteps):
   
   
   innerConverged = False
+  
+  # initial guess is that du/dt will be the same over this step
+  if outer > 5:
+    solver.u += solver.dt*prev_du_dt
+    solver.ux = numpy.dot(solver.cheb.Dx/solver.xg,solver.u)
+    solver.xg += solver.dt*prev_dxg_dt
   
   newH = solver.iterateImplicitTimeStep()
   newXg = solver.newtonStepXg(newH)
@@ -283,9 +294,14 @@ for outer in range(maxSteps):
     
     if(solver.plot):
       dH_dt = (newH-solver.oldH)/solver.dt
-
+      du_dt = (solver.u-solver.oldU)/solver.dt
+      x = solver.cheb.x*solver.xg
       ax = plt.subplot(2,3,5)
-      plt.plot(solver.cheb.x*solver.xg,solver.u-solver.oldU, 'r')
+      ax.cla()
+      plt.plot(x,prev_dH_dt, 'g')
+      plt.plot(x,prev_du_dt, 'm')
+      plt.plot(x,dH_dt, 'b')
+      plt.plot(x,du_dt, 'r')
 
       dH_dt = numpy.amax(numpy.abs(dH_dt))
       ax = plt.subplot(2,3,1)
@@ -313,9 +329,12 @@ for outer in range(maxSteps):
     print "Error: inner loop did not converge after %i steps!"%maxInnerSteps
     print "Try reducing the goal CFL number."
     exit(1)
-    
+  
   dH_dt = (newH-solver.oldH)/solver.dt
+  prev_dH_dt = dH_dt
+  prev_du_dt = (solver.u-solver.oldU)/solver.dt
   dxg_dt = (newXg-solver.oldXg)/solver.dt
+  prev_dxg_dt = dxg_dt
   diffH = numpy.amax(numpy.abs(dH_dt))
   diffXg = numpy.abs(dxg_dt)
   solver.time += solver.dt
