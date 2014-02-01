@@ -119,9 +119,6 @@ class SteadyStateSolver:
     if(self.plot):
       import matplotlib.pyplot as plt
       plt.figure(1, figsize=(16, 12))
-      ax = plt.subplot(2,3,5)
-      ax.cla()
-      plt.plot(x,newH-self.oldH, 'b')
       ax = plt.subplot(2,3,6)
       ax.cla()
       plt.plot(x,(newH-self.oldH)/self.dt, 'b', x,-sigma*dxg_dt*newHx, 'r', 
