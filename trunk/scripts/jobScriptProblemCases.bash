@@ -49,7 +49,7 @@ CFL=100
 cd vary_lambda_0
 for lambda_0 in 3.125e-2 6.250e-2 
 do
-  prefix=lambda_0$lambda_0
+  prefix=lambda_0_$lambda_0
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_0 --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
   $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
 done
@@ -93,7 +93,7 @@ CFL=100
 cd vary_lambda_0
 for lambda_0 in 3.125e-2 6.250e-2
 do
-  prefix=lambda_0$lambda_0
+  prefix=lambda_0_$lambda_0
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_0 --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
   $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
 done

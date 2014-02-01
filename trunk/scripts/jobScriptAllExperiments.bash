@@ -2,7 +2,7 @@
 #PBS -q regular
 #PBS -l mppwidth=24
 #PBS -l walltime=12:00:00
-#PBS -N chebPython
+#PBS -N touchstone
 #PBS -A m1041
 #PBS -m ae
 
@@ -38,8 +38,15 @@ cd ..
 mkdir -p vary_C
 cd vary_C
 C_CFL=50
-for C in 7.624e8 3.812e8 7.624e7 7.624e6 7.624e5 3.812e5 2.541e5 1.906e5 \
+for C in 3.812e8 7.624e7 7.624e6 7.624e5 3.812e5 2.541e5 1.906e5 \
   1.525e5 7.624e4 #3.812e4
+do
+  prefix=C_$C
+  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$C_CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
+  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
+done
+C_CFL=10
+for C in 7.624e8 
 do
   prefix=C_$C
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$C_CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
@@ -49,7 +56,15 @@ cd ..
 
 mkdir -p vary_slope
 cd vary_slope
-for slope in 100 500 1000 2500 5000 10000 50000
+CFL=400
+for slope in 500 1000 2500 5000 10000 50000
+do
+  prefix=slope_$slope
+  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope --C=$C_ref --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
+  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
+done
+CFL=100
+for slope in 100
 do
   prefix=slope_$slope
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope --C=$C_ref --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
@@ -58,9 +73,17 @@ done
 cd ..
 
 mkdir -p vary_lambda_0
+CFL=400
 cd vary_lambda_0
-for lambda_0 in 3.125e-2 6.250e-2 2.500e-1 5.000e-1 1.000e+0 2.000e+0 \
-  4.000e+0 8.000e+0 1.600e+1 6.400e+1 1.280e+2
+for lambda_0 in 2.500e-1 5.000e-1 1.000e+0 2.000e+0 4.000e+0 8.000e+0 \
+  1.600e+1 6.400e+1 1.280e+2
+do
+  prefix=lambda_0_$lambda_0
+  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_0 --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
+  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
+done
+CFL=100
+for lambda_0 in 3.125e-2 6.250e-2 
 do
   prefix=lambda_0_$lambda_0
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_0 --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
