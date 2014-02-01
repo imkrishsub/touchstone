@@ -18,41 +18,12 @@ dt=1e-6
 maxXg=100.0
 minXg=0.6936416184971098
 
-p=0.00
-cd p_$p
-
-cd vary_C
-CFL=10
-for C in 3.812e4
-do
-  previx=C_$C
-  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
-  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
-done
-cd ..
-
-
-cd ..
-p=0.25
-cd p_$p
-
-cd vary_C
-CFL=10
-for C in 3.812e4
-do
-  previx=C_$C
-  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
-  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
-done
-cd ..
-
-cd ..
 p=0.50
 cd p_$p
 
-CFL=10
+CFL=5
 cd vary_C
-for C in 7.624e8 3.812e4
+for C in 7.624e8
 do
   prefix=C_$C
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
@@ -73,16 +44,6 @@ cd ..
 cd ..
 p=0.75
 cd p_$p
-
-CFL=10
-cd vary_C
-for C in 3.812e4
-do
-  prefix=C_$C
-  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
-  $codeFolder/scripts/runOneCase.bash "$commonArgs" $prefix $codeFolder &
-done
-cd ..
 
 CFL=100
 cd vary_lambda_0
@@ -108,9 +69,9 @@ do
 done
 cd ..
 
-CFL=10
+CFL=5
 cd vary_C
-for C in 7.624e8 3.812e4
+for C in 7.624e8
 do
   prefix=C_$C
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
