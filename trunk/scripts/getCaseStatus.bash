@@ -8,6 +8,10 @@ for initFile in $initFiles
 do
   IFS='/' read pFolder vFolder fileName <<< "$initFile"
   IFS='_' read var value ending <<< "$fileName"
+  if [[ "$var" = "lambda" ]] ; then 
+    IFS='_' read var extra value ending <<< "$fileName"
+    var=${var}_$extra
+  fi
   expt=${var}_${value}
   prefix=$pFolder/$vFolder/$expt
   if [[ -f ${prefix}_final.log ]] ; then
@@ -27,7 +31,7 @@ do
   if [[ -n $result ]] ; then
     echo failed! Try reducing CFL.
   fi
-  result=`grep Eror "$logFile"`
+  result=`grep Error "$logFile"`
   if [[ -n $result ]] ; then
     echo failed! Try reducing CFL.
   fi
