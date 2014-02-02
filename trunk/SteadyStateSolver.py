@@ -242,7 +242,8 @@ class SteadyStateSolver:
       plt.plot(x,tauLk, 'b', x, tauBk, 'r', x, tauD, 'g', x, residual, 'k')
       ax = plt.subplot(2,3,4)
       ax.cla()
-      plt.plot(x,uk, 'b', x, ukp1, 'r')
+      plt.plot(x,uk, 'b', x, ukp1, 'r', x, Np**n/self.Kappa,'g')
+      plt.ylim(numpy.amin(ukp1),numpy.amax(ukp1))
       #plt.subplot(2,3,5)
       #plt.plot(x,uxk,'b',x,uxkp1,'r',x,rhs[-1]*numpy.ones(x.shape),'g')
 #      if(self.plotContinuous):
