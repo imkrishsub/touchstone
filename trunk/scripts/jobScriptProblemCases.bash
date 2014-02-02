@@ -21,7 +21,7 @@ minXg=0.6936416184971098
 p=0.50
 cd p_$p
 
-CFL=5
+CFL=10
 cd vary_C
 for C in 7.624e8
 do
@@ -45,7 +45,7 @@ cd ..
 p=0.75
 cd p_$p
 
-CFL=100
+CFL=200
 cd vary_lambda_0
 for lambda_0 in 3.125e-2 6.250e-2 
 do
@@ -69,7 +69,7 @@ do
 done
 cd ..
 
-CFL=5
+CFL=10
 cd vary_C
 for C in 7.624e8
 do
