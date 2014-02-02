@@ -187,9 +187,15 @@ if(solver.plot):
 if(solver.plot and solver.plotContinuous):
   plt.ion()
 
-if(options.inFile == "none"):
+if(options.inFile == "none" or options.inFile == "zero"):
   solver.time = 0
-  (HGuess,xgGuess) = initH(solver,options.minXg,options.maxXg)
+  if(options.inFile == "none"):
+    (HGuess,xgGuess) = initH(solver,options.minXg,options.maxXg)
+  
+  if(options.inFile == "zero"):
+    print "initializing with zero."
+    HGuess = 1e-4*numpy.ones(solver.cheb.x.shape)
+    xgGuess = 0.7
   
   solver.updateH(HGuess,xgGuess)
   
