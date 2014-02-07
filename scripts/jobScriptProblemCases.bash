@@ -8,6 +8,8 @@
 
 cd $PBS_O_WORKDIR
 
+module load python
+
 slope_ref=778.5
 C_ref=7.624e6
 lambda_ref=2.0
@@ -59,7 +61,7 @@ cd ..
 p=1.00
 cd p_$p
 
-CFL=100
+CFL=200
 cd vary_A
 for A in 4.6416e-24 
 do

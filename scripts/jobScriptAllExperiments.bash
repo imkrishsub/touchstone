@@ -8,6 +8,8 @@
 
 cd $PBS_O_WORKDIR
 
+module load python
+
 if [[ -z $p ]] ; then
   echo "please set p by running \'qsub -v p=x.xx ...\'"
   exit 1
