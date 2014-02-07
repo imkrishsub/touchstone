@@ -15,7 +15,7 @@ strictFile=${prefix}_strict
 finalFile=${prefix}_final
 filePointer=${prefix}.pointer
 
-commonCommand="python $codeFolder/main.py $commonArgs --filePointer=$filePointer"
+commonCommand="aprun -n 1 python $codeFolder/main.py $commonArgs --filePointer=$filePointer"
 
 restartFile=""
 if [[ -f $filePointer ]] ; then
