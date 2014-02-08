@@ -1,7 +1,7 @@
 #PBS -S /bin/csh
-#PBS -q debug
-#PBS -l mppwidth=24
-#PBS -l walltime=00:05:00
+#PBS -q regular
+#PBS -l mppwidth=48
+#PBS -l walltime=24:00:00
 #PBS -N touchstone
 #PBS -A m1041
 #PBS -m ae
@@ -23,7 +23,8 @@ echo caseLines: $caseLines
 
 echo caseCount: $caseCount
 
-set script = "python runOneCase.py"
+set script = "python code/runOneCase.py"
 echo script: $script
 
-tf -t $caseCount -n 1 -o $logDir/touchstoneCase%t.out -e $logDir/touchstoneCase%t.err $script $caseFile \$TF_TASKID
+tf -t $caseCount -n 2 -o $logDir/touchstoneCase%t.out \
+  -e $logDir/touchstoneCase%t.err $script $caseFile \$TF_TASKID
