@@ -1,13 +1,38 @@
 #!/bin/bash
 
-commonArgs=$1 
-prefix=$2
-codeFolder=$3
-inputFile=$4
+caseFile=$1 
+caseIndex=$2
+inputFile=$3
 
-echo running case: $prefix from $inputFile
+echo caseFile=$caseFile 
 
-#echo $commonArgs
+IFS=$'\r\n' caseList=($(cat $caseFile))
+
+lineIndex=$(( 3 * caseIndex))
+dir="${caseList[$lineIndex]}"
+let lineIndex=$lineIndex+1
+prefix="${caseList[$lineIndex]}"
+let lineIndex=$lineIndex+1
+commonArgs="${caseList[$lineIndex]}"
+let lineIndex=$lineIndex+1
+
+echo running case: $prefix
+if [[ -n "$inputFile" ]] ; then
+ echo reading input from $inputFile
+fi
+
+mkdir -p $dir
+cd $dir
+
+which python
+whereis python
+ls ../../code
+
+
+testCommand="python --version"
+echo testing $testCommand
+$testCommand
+exit
 
 initFile=${prefix}_init
 looseFile=${prefix}_loose
@@ -15,7 +40,7 @@ strictFile=${prefix}_strict
 finalFile=${prefix}_final
 filePointer=${prefix}.pointer
 
-commonCommand="aprun -n 1 python $codeFolder/main.py $commonArgs --filePointer=$filePointer"
+commonCommand="python ../../code/main.py $commonArgs --filePointer=$filePointer"
 
 restartFile=""
 if [[ -f $filePointer ]] ; then
@@ -23,8 +48,9 @@ if [[ -f $filePointer ]] ; then
 else
   if [[ -f $inputFile ]] ; then
     restartFile=$inputFile
-  else
-    echo warning: input file $inputFile not found.
+  elif [[ -n "$inputFile" ]] ; then
+    echo exiting: input file $inputFile not found.
+    exit 1
   fi
 fi
 
@@ -33,7 +59,7 @@ echo restarting from file: $restartFile
 if [[ -z "$restartFile" ]] ; then
   echo init
   $commonCommand --outFile=$initFile.pyda \
-    --eps_s=1e-3 --maxStep=0 --maxToleranceInner=1e-3 > $initFile.log
+    --eps_s=1e-3 --maxStep=0 --maxToleranceInner=1e-3 # > $initFile.log
   if [ $? -ne 0 ]; then
     echo "init failed! Exiting."
     exit 1
