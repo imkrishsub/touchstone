@@ -29,11 +29,11 @@ do
   fi
   result=`grep blew "$logFile"`
   if [[ -n $result ]] ; then
-    echo failed! Try reducing CFL.
+    echo $prefix failed! Try reducing CFL.
   fi
   result=`grep Error "$logFile"`
   if [[ -n $result ]] ; then
-    echo failed! Try reducing CFL.
+    echo $prefix failed! Try reducing CFL.
   fi
 
 done
