@@ -11,6 +11,7 @@ caseCount=$(( caseLines / 3 ))
 rm $outCaseFile
 
 lineIndex=0
+caseIndex=0
 for index in $(seq 1 $caseCount)
 do
   dir="${caseList[$lineIndex]}"
@@ -24,10 +25,11 @@ do
   if [[ -f ${logPrefix}_final.pyda ]] ; then
     echo $index skipping finished case $logPrefix
   else
-    echo $index adding case $logPrefix
+    echo $index adding unfinished case $caseIndex to $logPrefix
     echo $dir >> $outCaseFile
     echo $prefix >> $outCaseFile
     echo $commonArgs >> $outCaseFile
+    let caseIndex=$caseIndex+1
   fi
 
 done
