@@ -82,7 +82,7 @@ if (restartFile != "%s.pyda"%strictFile) and ( restartFile != "%s.pyda"%finalFil
   logFile = open("%s.log"%looseFile,'w')
   errFile = open("%s.err"%looseFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%looseFile, "--eps_s=1e-3", 
-    "--maxStep=10000", "--maxToleranceInner=1e-3", "--inFile=%s"%restartFile, 
+    "--maxStep=100000", "--maxToleranceInner=1e-3", "--inFile=%s"%restartFile, 
     "--toleranceH=1e-1", "--toleranceXg=1e-1"]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
@@ -97,7 +97,7 @@ if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile)
   logFile = open("%s.log"%strictFile,'w')
   errFile = open("%s.err"%strictFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%strictFile, "--eps_s=1e-8", 
-    "--maxStep=10000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
+    "--maxStep=100000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
     "--toleranceH=1e-2", "--toleranceXg=1e-2"]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
@@ -112,7 +112,7 @@ if (restartFile == "%s.pyda"%strictFile):
   logFile = open("%s.log"%finalFile,'w')
   errFile = open("%s.err"%finalFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
-    "--maxStep=10000", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
+    "--maxStep=10", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
     "--toleranceH=1e-2", "--toleranceXg=1e-2"]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
