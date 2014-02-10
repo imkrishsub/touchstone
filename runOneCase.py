@@ -21,7 +21,7 @@ dir=caseList[lineIndex]
 prefix=caseList[lineIndex+1]
 commonArgs=caseList[lineIndex+2].split()
 
-print "running case:", prefix
+print "running case: %s/%s"%(dir,prefix)
 if (inputFile != "none"):
  print "reading input from", inputFile
 
@@ -92,7 +92,7 @@ if (restartFile != "%s.pyda"%strictFile) and ( restartFile != "%s.pyda"%finalFil
     exit(status)
   restartFile="%s.pyda"%looseFile
 
-if (restartFile == "%s.pyda"%looseFile) or (restartFile != "%s.pyda"%strictFile): 
+if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile): 
   print "strict from", restartFile
   logFile = open("%s.log"%strictFile,'w')
   errFile = open("%s.err"%strictFile,'w')
@@ -107,7 +107,7 @@ if (restartFile == "%s.pyda"%looseFile) or (restartFile != "%s.pyda"%strictFile)
     exit(status)
   restartFile="%s.pyda"%strictFile
 
-if (restartFile != "%s.pyda"%strictFile):
+if (restartFile == "%s.pyda"%strictFile):
   print "final from", restartFile
   logFile = open("%s.log"%finalFile,'w')
   errFile = open("%s.err"%finalFile,'w')
