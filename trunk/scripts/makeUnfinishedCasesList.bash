@@ -25,11 +25,11 @@ do
   if [[ -f ${logPrefix}_final.pyda ]] ; then
     echo $index skipping finished case $logPrefix
   else
-    echo $index adding unfinished case $caseIndex to $logPrefix
+    let caseIndex=$caseIndex+1
+    echo $index adding unfinished case $caseIndex: $logPrefix
     echo $dir >> $outCaseFile
     echo $prefix >> $outCaseFile
     echo $commonArgs >> $outCaseFile
-    let caseIndex=$caseIndex+1
   fi
 
 done
