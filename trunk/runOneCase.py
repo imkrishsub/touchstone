@@ -53,6 +53,9 @@ restartFile="none"
 if os.path.exists(filePointer):
   lines = [line.rstrip('\n') for line in open(filePointer)]
   restartFile = lines[0]
+  # a temporary measure to force all cases to start over from strict
+  if(restartFile == "%s.pyda"%finalFile):
+    restartFile = "%s.pyda"%strictFile
 else:
   if os.path.exists(inputFile):
     restartFile=inputFile
@@ -98,7 +101,7 @@ if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile)
   errFile = open("%s.err"%strictFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%strictFile, "--eps_s=1e-8", 
     "--maxStep=100000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
-    "--toleranceH=1e-2", "--toleranceXg=1e-2"]
+    "--toleranceH=1e-3", "--toleranceXg=1e-3"]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
   errFile.close()
@@ -112,8 +115,8 @@ if (restartFile == "%s.pyda"%strictFile):
   logFile = open("%s.log"%finalFile,'w')
   errFile = open("%s.err"%finalFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
-    "--maxStep=10", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
-    "--toleranceH=1e-2", "--toleranceXg=1e-2"]
+    "--maxStep=1000", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
+    "--toleranceH=1e-3", "--toleranceXg=1e-3"]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
   errFile.close()
