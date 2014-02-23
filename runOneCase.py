@@ -45,6 +45,9 @@ strictFile="%s_strict"%prefix
 finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
+looseTolerance='1e-3'
+strictTolerance='1e-6'
+
 commonArgs.insert(0,"python")
 commonArgs.insert(1,"../../code/main.py")
 commonArgs.append("--filePointer=%s"%filePointer)
@@ -53,9 +56,6 @@ restartFile="none"
 if os.path.exists(filePointer):
   lines = [line.rstrip('\n') for line in open(filePointer)]
   restartFile = lines[0]
-  # a temporary measure to force all cases to start over from strict
-  if(restartFile == "%s.pyda"%finalFile):
-    restartFile = "%s.pyda"%strictFile
 else:
   if os.path.exists(inputFile):
     restartFile=inputFile
@@ -86,7 +86,7 @@ if (restartFile != "%s.pyda"%strictFile) and ( restartFile != "%s.pyda"%finalFil
   errFile = open("%s.err"%looseFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%looseFile, "--eps_s=1e-3", 
     "--maxStep=100000", "--maxToleranceInner=1e-3", "--inFile=%s"%restartFile, 
-    "--toleranceH=1e-1", "--toleranceXg=1e-1"]
+    "--toleranceH=%s"%looseTolerance, "--toleranceXg=%s"%looseTolerance]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
   errFile.close()
@@ -101,7 +101,7 @@ if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile)
   errFile = open("%s.err"%strictFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%strictFile, "--eps_s=1e-8", 
     "--maxStep=100000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
-    "--toleranceH=1e-3", "--toleranceXg=1e-3"]
+    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
   errFile.close()
@@ -116,7 +116,7 @@ if (restartFile == "%s.pyda"%strictFile):
   errFile = open("%s.err"%finalFile,'w')
   args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
     "--maxStep=1000", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
-    "--toleranceH=1e-3", "--toleranceXg=1e-3"]
+    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
   status = subprocess.call(args, stdout=logFile, stderr=errFile)
   logFile.close()
   errFile.close()
