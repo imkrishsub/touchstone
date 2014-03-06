@@ -9,9 +9,9 @@ class SteadyStateSolver:
     
     # Chebyshev operators
     self.cheb = Chebyshev.Chebyshev(Nx)
-    self.intX_H = self.cheb.intX.copy()
-    for index in range(Nx):
-      self.intX_H[index,:] -= self.intX_H[-1,:]
+    #self.intX_H = self.cheb.intX.copy()
+    #for index in range(Nx):
+    #  self.intX_H[index,:] -= self.intX_H[-1,:]
       
     # default values for constants
     self.rho_i = 900.0 # kg/m^3 ice density
