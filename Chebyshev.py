@@ -5,20 +5,6 @@ import math
 #import numpy.linalg as linalg
 import chebtran
 
-#def transformPhysToCheb(field):
-#  Nx = field.size
-#  field_f = scipy.fftpack.idct(field,type=1)
-#  field_f[0] *= 0.5
-#  field_f[-1] *= 0.5
-#  field_f *= 1./float(Nx-1)
-#  
-#  return field_f
-#  
-#def transformChebToPhys(field_f):
-#  fieldCopy = field_f.copy()
-#  fieldCopy[1:-1] *= 0.5
-#  
-#  return scipy.fftpack.dct(fieldCopy,type=1)
 
 def transformPhysToCheb(field):
   return chebtran.ifcglt(field)
@@ -38,17 +24,6 @@ def intXCheb(field_f,xMax):
   return field_int
 
 
-#def dxCheb(field_f,xMax):
-#  Nx = field_f.size
-#  field_dx = numpy.zeros(field_f.shape,float)
-#  field_dx[-2] = 2.0*(Nx-1)*field_f[-1]
-#  for n in range(Nx-3,0,-1):
-#    field_dx[n] = field_dx[n+2] + 2.0*(n+1)*field_f[n+1]
-#  field_dx[0] = 0.5*field_dx[2] + field_f[1]
-#  field_dx *= -2.0/xMax
-#  
-#  return field_dx
-  
 def dxCheb(field_f,xMax):
   Nx = field_f.size
   temp = 2.0*numpy.arange(Nx)*field_f
@@ -92,11 +67,11 @@ def null(A, eps=1e-15):
   
 class Chebyshev:
   def __init__(self, Nx):
-    self.Tx = transformChebToPhys(numpy.identity(Nx)) #numpy.zeros((Nx,Nx),float)
-    self.invTx = transformPhysToCheb(numpy.identity(Nx)) #numpy.zeros((Nx,Nx),float)
+    #self.Tx = transformChebToPhys(numpy.identity(Nx)) #numpy.zeros((Nx,Nx),float)
+    #self.invTx = transformPhysToCheb(numpy.identity(Nx)) #numpy.zeros((Nx,Nx),float)
     self.Dx = numpy.zeros((Nx,Nx),float)
-    self.Dxx = numpy.zeros((Nx,Nx),float)
-    self.intX = numpy.zeros((Nx,Nx),float)
+    #self.Dxx = numpy.zeros((Nx,Nx),float)
+    #self.intX = numpy.zeros((Nx,Nx),float)
     for n in range(Nx):
       delta = numpy.zeros((Nx),float)
       delta[n] = 1.0
@@ -104,9 +79,9 @@ class Chebyshev:
       #self.Tx[:,n] = transformChebToPhys(delta)
       #self.invTx[:,n] = delta_f
       deltax_f = dxCheb(delta_f,1.0)
-      self.intX[:,n] = intXPhys(delta,1.0)
+      #self.intX[:,n] = intXPhys(delta,1.0)
       self.Dx[:,n] = transformChebToPhys(deltax_f)
-      self.Dxx[:,n] = transformChebToPhys(dxCheb(deltax_f,1.0))
+      #self.Dxx[:,n] = transformChebToPhys(dxCheb(deltax_f,1.0))
     
 #    print self.intX[-10:,-10:]
 #    
