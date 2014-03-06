@@ -48,7 +48,7 @@ filePointer="%s.pointer"%prefix
 looseTolerance='1e-3'
 strictTolerance='1e-6'
 
-commonArgs = ["python", "../../code/mainSheetShelf.py"] \
+commonArgs = ["python", "../../code/main.py"] \
   + commonArgs \
   + ["--filePointer=%s"%filePointer]
 
