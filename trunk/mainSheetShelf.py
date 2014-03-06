@@ -75,7 +75,11 @@ def writeResults(fileName, solver):
   time.tofile(filePointer)
   solver.H.tofile(filePointer)
   solver.u.tofile(filePointer)
-  x = xg*solver.cheb.x
+  xSheet = solver.xg*solver.cheb.x
+  xShelf = solver.xg + (solver.xc-solver.xg)*solver.cheb.x
+  x = numpy.zeros((2*Nx))
+  x[0:Nx] = xSheet
+  x[Nx:2*Nx] = xShelf
   x.tofile(filePointer)
   solver.sx.tofile(filePointer)
   solver.ux.tofile(filePointer)
@@ -93,6 +97,8 @@ def writeResults(fileName, solver):
   linearSlope.tofile(filePointer)
   eps_s = numpy.array(solver.eps_s)
   eps_s.tofile(filePointer)
+  xc = numpy.array(solver.xc)
+  xc.tofile(filePointer)
   filePointer.close()
   filePointer = open("%s/%s"%(options.folder,options.filePointer),'w')
   filePointer.write("%s\n"%options.outFile)
