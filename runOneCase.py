@@ -48,9 +48,9 @@ filePointer="%s.pointer"%prefix
 looseTolerance='1e-3'
 strictTolerance='1e-6'
 
-commonArgs.insert(0,"python")
-commonArgs.insert(1,"../../code/main.py")
-commonArgs.append("--filePointer=%s"%filePointer)
+commonArgs = ["python", "../../code/mainSheetShelf.py"] \
+  + commonArgs \
+  + ["--filePointer=%s"%filePointer]
 
 restartFile="none"
 if os.path.exists(filePointer):
