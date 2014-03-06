@@ -26,17 +26,8 @@ do
 done
 
 CFL=50
-for C in 3.812e8 7.624e7 7.624e6 7.624e5 3.812e5 2.541e5 1.906e5 \
-  1.525e5 7.624e4 #3.812e4
-do
-  prefix=C_$C
-  commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
-  echo p_$p/vary_C >> $fileName
-  echo $prefix >> $fileName
-  echo $commonArgs >> $fileName
-done
-CFL=10
-for C in 7.624e8 
+for C in 2.541e5 3.812e5 7.624e5 1.258e6 1.994e6 3.160e6 5.008e6 7.624e6 \
+   12.58e6 19.94e6 31.60e6 7.624e7 3.812e8
 do
   prefix=C_$C
   commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg"
