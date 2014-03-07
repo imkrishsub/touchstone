@@ -50,7 +50,7 @@ strictTolerance='1e-6'
 
 commonArgs = ["python", "../../code/mainSheetShelf.py"] \
   + commonArgs \
-  + ["--filePointer=%s"%filePointer, "--plot", "--plotContinuous"]
+  + ["--filePointer=%s"%filePointer, "--xc=2.112"]
 
 restartFile="none"
 if os.path.exists(filePointer):
