@@ -206,6 +206,9 @@ if(options.inFile == "none" or options.inFile == "zero"):
   solver.time = 0
   if(options.inFile == "none"):
     (HGuessSheet,xgGuess) = initH(solver,options.minXg,options.maxXg)
+    if(xgGuess > options.xc):
+      print "xgGuess=%f > xc=%f: cannot proceed!"%(xgGuess,options.xc)
+      exit(1)
     HGuess = numpy.zeros((2*solver.Nx))
     HGuess[0:Nx] = HGuessSheet
     uxg = solver.a*xgGuess/HGuessSheet[-1]
