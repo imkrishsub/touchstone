@@ -108,6 +108,7 @@ def writeResults(fileName, solver):
 parser = OptionParser()
 
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
+parser.add_option("--invW", type="float", default=0.0, dest="invW")
 
 parser.add_option("--p", type="float", default=0.0, dest="p")
 parser.add_option("--A", type="float", default=1e-25, dest="A")
@@ -171,6 +172,7 @@ solver.plot = options.plot
 #solver.useLongi = False
 
 solver.xc = options.xc
+solver.invW = options.invW
 
 solver.eps_s = eps_s
 solver.p = options.p
