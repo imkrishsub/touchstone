@@ -107,7 +107,7 @@ def writeResults(fileName, solver):
 
 parser = OptionParser()
 
-parser.add_option("--xc", type="float", default=2.4, dest="xc")
+parser.add_option("--xc", type="float", default=2.112, dest="xc")
 
 parser.add_option("--p", type="float", default=0.0, dest="p")
 parser.add_option("--A", type="float", default=1e-25, dest="A")
@@ -381,9 +381,10 @@ for outer in range(maxSteps):
     converged = True
     break
   # make the inner tolerance stricter as H and xg converge
-  # changes in the inner loop should be at most around 10% of changes in the outer loop
-  #toleranceInner = min(maxToleranceInner,0.1*solver.dt*max(diffH/numpy.amax(newH),diffXg/newXg))
-  toleranceInner = min(maxToleranceInner,solver.dt*max(diffH/numpy.amax(newH),diffXg/newXg))
+  # changes in the inner loop should be at most the size of changes in the outer loop,
+  # once we have reached the goal CFL
+  maxChange = max(diffH/numpy.amax(newH),diffXg/newXg)
+  toleranceInner = min(maxToleranceInner,solver.dt*goalCFL/cfl*maxChange)
 
   scale = max(0.5,min(2.0,goalCFL/cfl))
   solver.dt *= scale
