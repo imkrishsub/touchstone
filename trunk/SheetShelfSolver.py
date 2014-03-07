@@ -205,12 +205,12 @@ class SheetShelfSolver:
       tauLCoeff[0:Nx] = 0.
 
     #tau_b = -gamma*(N^n/(Kappa*|u| + N^n))^(1/n) u/|u|
-    abs_u = self.absS(uk[0:Nx])
+    abs_u = self.absS(uk)
     tauBCoeff = numpy.zeros(x.shape)
     if(self.useSchoofBasal):
-      tauBCoeff[0:Nx] = -self.gamma*abs_u**(1/n-1)
+      tauBCoeff[0:Nx] = -self.gamma*abs_u[0:Nx]**(1/n-1)
     else:
-      tauBCoeff[0:Nx] = -self.gamma*Np*(abs_u/(self.Kappa*abs_u + Np**n))**(1./n)/abs_u
+      tauBCoeff[0:Nx] = -self.gamma*Np*(abs_u[0:Nx]/(self.Kappa*abs_u[0:Nx] + Np**n))**(1./n)/abs_u[0:Nx]
 
     #tau_w = -omega*H*W^(-1-1/n)*|u|^(1/n-1) u
     tauWCoeff = -self.omega*H*self.invW**(1.+1./n)*abs_u**(1/n-1)
