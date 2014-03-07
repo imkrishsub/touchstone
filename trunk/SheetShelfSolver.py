@@ -27,15 +27,19 @@ class SheetShelfSolver:
     sPerY = 365.25*24.*3600. # number of seconds per year
     self.g = 9.8 # m/s^2 gravity acceleration
     self.aBar = .3/sPerY # m.s-1 accumulation rate
-    self.HBar = 1000. # m hight scaling factor
+    self.HBar = 1000. # m height scaling factor
     self.xBar = 1000000. # m domain scaling factor
     self.uBar = self.aBar*self.xBar/self.HBar # m/s ice velocity scaling factor
     self.n = 3. # Glen's flow parameter
+    self.WBar = 1000. # m width scaling factor
 
     self.lambda_0 = 2   # wavelength of bedrock bump (m)
     self.m_0  = .5  # maximum bed obstacle slope (no unit)
     
     self.eps_s = 1e-3
+    
+    self.xc = 2.4
+    self.invW = 0.0
     
     self.computeNondimConstants()
     
@@ -50,6 +54,9 @@ class SheetShelfSolver:
     self.Kappa = self.m_0/(self.lambda_0*self.Ab)*self.uBar/NBar**n
     self.epsilon = tauLBar/(2*tauDBar)
     self.gamma = tauBBar/tauDBar
+    
+    tauWBar = self.HBar/self.WBar*(5.*self.uBar/(2.*self.A*self.WBar))**(1./n)
+    self.omega = tauWBar/tauDBar
     
     self.delta = 1.0 - self.rho_i/self.rho_w
         
@@ -201,10 +208,12 @@ class SheetShelfSolver:
     abs_u = self.absS(uk[0:Nx])
     tauBCoeff = numpy.zeros(x.shape)
     if(self.useSchoofBasal):
-      tauBCoeff[0:Nx] = -self.gamma/abs_u
+      tauBCoeff[0:Nx] = -self.gamma*abs_u**(1/n-1)
     else:
       tauBCoeff[0:Nx] = -self.gamma*Np*(abs_u/(self.Kappa*abs_u + Np**n))**(1./n)/abs_u
 
+    #tau_w = -omega*H*W^(-1-1/n)*|u|^(1/n-1) u
+    tauWCoeff = -self.omega*H*self.invW**(1.+1./n)*abs_u**(1/n-1)
 
     #tau_d = -H sx
     tauD = -H*self.sx
@@ -214,7 +223,7 @@ class SheetShelfSolver:
     
     residual = tauLk + tauBk + tauD
     
-    M = numpy.dot(Dx,numpy.dot(numpy.diag(tauLCoeff),Dx)) + numpy.diag(tauBCoeff)
+    M = numpy.dot(Dx,numpy.dot(numpy.diag(tauLCoeff),Dx)) + numpy.diag(tauBCoeff + tauWCoeff)
     rhs = -tauD
     
     # velocity is zero at the ice divide
