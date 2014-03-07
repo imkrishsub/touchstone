@@ -220,8 +220,9 @@ class SheetShelfSolver:
 
     tauLk = numpy.dot(Dx,tauLCoeff*uxk)
     tauBk = tauBCoeff*uk
+    tauWk = tauWCoeff*uk
     
-    residual = tauLk + tauBk + tauD
+    residual = tauLk + tauBk + tauD + tauWk
     
     M = numpy.dot(Dx,numpy.dot(numpy.diag(tauLCoeff),Dx)) + numpy.diag(tauBCoeff + tauWCoeff)
     rhs = -tauD
@@ -266,7 +267,7 @@ class SheetShelfSolver:
                x[1:-1], residual_check[1:-1], 'k--')
       ax = plt.subplot(2,3,3)
       ax.cla()
-      plt.plot(x,tauLk, 'b', x, tauBk, 'r', x, tauD, 'g', x, residual, 'k')
+      plt.plot(x,tauLk, 'b', x, tauBk, 'r', x, tauWk, 'm', x, tauD, 'g', x, residual, 'k')
       ax = plt.subplot(2,3,4)
       ax.cla()
       plt.plot(x,uk, 'b', x, ukp1, 'r', x[0:Nx], Np**n/self.Kappa,'g')
