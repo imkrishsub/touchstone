@@ -39,7 +39,7 @@ class SheetShelfSolver:
     self.eps_s = 1e-3
     
     self.xc = 2.4
-    self.invW = 0.0
+    self.useChannelWidth = False
     
     self.computeNondimConstants()
     
@@ -64,6 +64,9 @@ class SheetShelfSolver:
   def updateH(self, H, xg):
     Nx = self.Nx
     xc = self.xc
+    if(xg >= xc):
+      print "Error: xg=%f >= xc=%f. Exiting..."%(xg,xc)
+      exit(1)
     DxSheet = self.cheb.Dx/xg
     xSheet = xg*self.cheb.x
     DxShelf = self.cheb.Dx/(xc-xg)
@@ -76,6 +79,7 @@ class SheetShelfSolver:
     self.H = H
     self.xg = xg
     self.xc = xc
+    self.x = x
 
     HxSheet = numpy.dot(DxSheet,self.H[0:Nx])
     HxShelf = numpy.dot(DxShelf,self.H[Nx:2*Nx])
@@ -91,6 +95,9 @@ class SheetShelfSolver:
     self.sx = numpy.zeros(x.shape)
     self.sx[0:Nx] = HxSheet-bx[0:Nx]
     self.sx[Nx:2*Nx] = self.delta*HxShelf
+    
+    if(self.useChannelWidth):
+      (self.W,self.Wx) = self.computeW(x,self)
   
   def absS(self,x):
     return numpy.sqrt(x**2 + self.eps_s**2)
@@ -125,13 +132,9 @@ class SheetShelfSolver:
     Nx = self.Nx
     xc = self.xc
     DxSheet = self.cheb.Dx/xg
-    xSheet = xg*self.cheb.x
     DxShelf = self.cheb.Dx/(xc-xg)
-    xShelf = xg + (xc-xg)*self.cheb.x
     
-    x = numpy.zeros((2*Nx))
-    x[0:Nx] = xSheet
-    x[Nx:2*Nx] = xShelf
+    x = self.x
     
     Dx = numpy.zeros((2*Nx,2*Nx))
     Dx[0:Nx,0:Nx] = DxSheet
@@ -143,8 +146,12 @@ class SheetShelfSolver:
     movingGridTerm[0:Nx] = -sigma*dxg_dt
     movingGridTerm[Nx:2*Nx] = -(1.-sigma)*dxg_dt
     
-    # dH/dt - sigma dxg_dt Hx + u Hx + ux H = a
-    M =  numpy.diag(1./self.dt  + self.ux) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
+    diag1 = 1./self.dt  + self.ux
+    if(self.useChannelWidth):
+      diag1 += (self.u*self.Wx)/self.W
+
+    # dH/dt - sigma dxg_dt Hx + u Hx + ux H + u H Wx/W = a (in sheet)
+    M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
     rhs = self.a + self.oldH/self.dt
     
     # have to replace a row to get continuity in H at xg
@@ -172,13 +179,9 @@ class SheetShelfSolver:
     Nx = self.Nx
     xc = self.xc
     DxSheet = self.cheb.Dx/xg
-    xSheet = xg*self.cheb.x
     DxShelf = self.cheb.Dx/(xc-xg)
-    xShelf = xg + (xc-xg)*self.cheb.x
     
-    x = numpy.zeros((2*Nx))
-    x[0:Nx] = xSheet
-    x[Nx:2*Nx] = xShelf
+    x = self.x
     
     Dx = numpy.zeros((2*Nx,2*Nx))
     Dx[0:Nx,0:Nx] = DxSheet
@@ -213,7 +216,10 @@ class SheetShelfSolver:
       tauBCoeff[0:Nx] = -self.gamma*Np*(abs_u[0:Nx]/(self.Kappa*abs_u[0:Nx] + Np**n))**(1./n)/abs_u[0:Nx]
 
     #tau_w = -omega*H*W^(-1-1/n)*|u|^(1/n-1) u
-    tauWCoeff = -self.omega*H*self.invW**(1.+1./n)*abs_u**(1/n-1)
+    if(self.useChannelWidth):
+      tauWCoeff = -self.omega*H*self.W**(-1.-1./n)*abs_u**(1/n-1)
+    else:
+      tauWCoeff = numpy.zeros(x.shape)
 
     #tau_d = -H sx
     tauD = -H*self.sx
