@@ -9,6 +9,12 @@ import os.path
 
 from initH import initH
 
+def computeWLinear(x,solver):
+  W = options.W0 + x*options.Wx
+  Wx = numpy.ones(x.shape)*options.Wx
+  return (W,Wx)
+
+
 def computeBLinear(x,solver):
   shoofx = 750000.
   slope = solver.linearSlope/solver.HBar
@@ -108,7 +114,9 @@ def writeResults(fileName, solver):
 parser = OptionParser()
 
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
-parser.add_option("--invW", type="float", default=0.0, dest="invW")
+parser.add_option("--useChannelWidth", action="store_true", dest="useChannelWidth")
+parser.add_option("--W0", type="float", default=1.0, dest="W0")
+parser.add_option("--Wx", type="float", default=0.0, dest="Wx")
 
 parser.add_option("--p", type="float", default=0.0, dest="p")
 parser.add_option("--A", type="float", default=1e-25, dest="A")
@@ -172,7 +180,8 @@ solver.plot = options.plot
 #solver.useLongi = False
 
 solver.xc = options.xc
-solver.invW = options.invW
+#solver.invW = options.invW
+solver.useChannelWidth = options.useChannelWidth
 
 solver.eps_s = eps_s
 solver.p = options.p
@@ -189,6 +198,9 @@ if(options.poly):
   solver.computeB = computeBPoly
 else:
   solver.computeB = computeBLinear
+  
+if(options.useChannelWidth):
+  solver.computeW = computeWLinear
 
 if(not os.path.exists(options.folder)):
   os.mkdir(options.folder)
