@@ -148,7 +148,7 @@ class SheetShelfSolver:
     
     diag1 = 1./self.dt  + self.ux
     if(self.useChannelWidth):
-      diag1 += (self.u*self.Wx)/self.W
+      diag1 += (self.u + movingGridTerm)*self.Wx/self.W
 
     # dH/dt - sigma dxg_dt Hx + u Hx + ux H + u H Wx/W = a (in sheet)
     M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
