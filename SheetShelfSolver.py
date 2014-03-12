@@ -31,7 +31,7 @@ class SheetShelfSolver:
     self.xBar = 1000000. # m domain scaling factor
     self.uBar = self.aBar*self.xBar/self.HBar # m/s ice velocity scaling factor
     self.n = 3. # Glen's flow parameter
-    self.WBar = 1000. # m width scaling factor
+    self.WBar = 10000. # m width scaling factor
 
     self.lambda_0 = 2   # wavelength of bedrock bump (m)
     self.m_0  = .5  # maximum bed obstacle slope (no unit)
