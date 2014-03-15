@@ -150,14 +150,22 @@ class SheetShelfSolver:
     if(self.useChannelWidth):
       diag1 += (self.u + movingGridTerm)*self.Wx/self.W
 
-    # dH/dt - sigma dxg_dt Hx + u Hx + ux H + u H Wx/W = a (in sheet)
+    # dH/dt (u - sigma dxg_dt) Hx + ux H + (u - sigma dxg_dt) H Wx/W = a (in sheet)
     M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
     rhs = self.a + self.oldH/self.dt
     
-    # have to replace a row to get continuity in H at xg
-    M[Nx,:] = 0.
-    M[Nx,Nx-1] = 1.
-    M[Nx,Nx] = -1.
+#    # have to replace a row to get continuity in H at xg
+#    M[Nx,:] = 0.
+#    M[Nx,Nx-1] = 1.
+#    M[Nx,Nx] = -1.
+#    rhs[Nx] = 0.
+    # have to replace rows to get continuity in H and Hx at xg
+    M[Nx-1,:] = 0.
+    M[Nx-1,Nx-1] = 1.
+    M[Nx-1,Nx] = -1.
+    rhs[Nx-1] = 0.
+    M[Nx,0:Nx] = DxSheet[Nx-1,:]
+    M[Nx,Nx:2*Nx] = -DxShelf[0,:]
     rhs[Nx] = 0.
     
     # no boundary conditions should be necessary -- ux H = a at the ice divide
@@ -264,9 +272,14 @@ class SheetShelfSolver:
       plt.figure(1, figsize=(16, 12))
       ax = plt.subplot(2,3,1)
       ax.cla()
-      oldX = self.cheb.x*self.oldXg
-      (oldB,oldBx) = self.computeB(oldX,self)
-      plt.plot(x,self.s, 'r', x, -self.b, 'k', x[0:Nx], Hf-self.b[0:Nx], 'g',oldX,self.oldH[0:Nx]-oldB,'b')
+      oldXSheet = self.cheb.x*self.oldXg
+      oldXShelf = self.oldXg + (xc-self.oldXg)*self.cheb.x
+      (oldB,oldBx) = self.computeB(oldXSheet,self)
+      plt.plot(x, -self.b, 'k', x[0:Nx], Hf-self.b[0:Nx], 'g',
+               x[Nx:2*Nx],-(1.-self.delta)*self.H[Nx:2*Nx], 'r', 
+               oldXSheet,self.oldH[0:Nx]-oldB,'b',
+               oldXShelf,self.delta*self.oldH[Nx:2*Nx],'b',
+               x,self.s, 'r')
       ax = plt.subplot(2,3,2)
       ax.cla()
       plt.plot(x[1:-1],solver_res[1:-1],'b', x[1:-1], residual[1:-1], 'r',
