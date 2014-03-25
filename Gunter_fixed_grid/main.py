@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import numpy
-from Solver2 import Solver
+from Solver import Solver
 from optparse import OptionParser
 
 from pprint import pprint
@@ -65,7 +65,7 @@ def writeResults(fileName, solver):
 
 parser = OptionParser()
 
-parser.add_option("--p", type="float", default=0.25, dest="p")
+parser.add_option("--p", type="float", default=0.0, dest="p")
 parser.add_option("--A", type="float", default=1e-24, dest="A")
 parser.add_option("--C", type="float", default=7.624e6, dest="C")
 parser.add_option("--W", type="float", default=10, dest="W")
@@ -84,9 +84,10 @@ parser.add_option("--filePointer", type="string", default="default.pointer", des
 parser.add_option("--Nx", type="int", default=1321, dest="Nx")
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
 parser.add_option("--deltaX", type="float", default=1.6, dest="deltaX")
-parser.add_option("--maxSteps", type="int", default=2000, dest="maxSteps")
+#parser.add_option("--maxSteps", type="int", default=2000, dest="maxSteps")
+parser.add_option("--maxSteps", type="int", default=1, dest="maxSteps")
 parser.add_option("--maxInnerSteps", type="int", default=200, dest="maxInnerSteps")
-parser.add_option("--maxSteps", type="int", default=200, dest="maxInitSteps")
+parser.add_option("--maxInitSteps", type="int", default=200, dest="maxInitSteps")
 parser.add_option("--stepsPerWrite", type="int", default=10, dest="stepsPerWrite")
 
 parser.add_option("--goalCFL", type="float", default=2.0, dest="goalCFL")
@@ -96,7 +97,7 @@ parser.add_option("--toleranceXg", type="float", default=0.1, dest="toleranceXg"
 parser.add_option("--maxToleranceInner", type="float", default=3e-3, dest="maxToleranceInner")
 parser.add_option("--initUTolerance", type="float", default=1e-3, dest="initUTolerance")
 parser.add_option("--dt", type="float", default=3e-4, dest="dt")
-parser.add_option("--XgInit", type="float", default=1.62, dest="XgInit")
+parser.add_option("--XgInit", type="float", default=1.0, dest="XgInit")
 
 parser.add_option("--plot", action="store_true", dest="plot")
 parser.add_option("--plotContinuous", action="store_true", dest="plotContinuous")
@@ -108,9 +109,14 @@ pprint(options.__dict__)
 
 xc = options.xc # calving front on u-grid
 deltaX = 1e-3*options.deltaX
+dt = options.dt
 Nx = options.Nx
 A = options.A
+C = options.C
+a = options.a
 p = options.p
+rho_i = options.rho_i
+lambda_0 = options.lambda_0
 XgInit = options.XgInit
 
 eps_s = options.eps_s
@@ -129,22 +135,13 @@ linearBed = not options.poly
 linearSlope = options.linearSlope
 useGLP = options.useGLP
 
-solver = Solver(Nx,deltaX,xc,p,A,linearBed,linearSlope,useGLP)
+solver = Solver(Nx,deltaX,xc,p,A,C,lambda_0,a,linearBed,linearSlope,rho_i,useGLP,eps_s)
 
 solver.plotContinuous = options.plotContinuous
 solver.plot = options.plot
-solver.maxPicardIter = options.maxInnersteps
+solver.maxPicardIter = options.maxInnerSteps
 #solver.useLongi = False
 
-solver.eps_s = eps_s
-solver.p = options.p
-solver.A = options.A
-solver.C = options.C
-solver.rho_i = options.rho_i
-solver.a = options.a
-solver.linearSlope = options.linearSlope
-solver.lambda_0 = options.lambda_0
-#solver.xg = options.XgInit
 
 
 if(not os.path.exists(options.folder)):
@@ -164,14 +161,8 @@ if(options.inFile == "none" or options.inFile == "zero"):
   if(options.inFile == "none"):
     (HGuess,uGuess) = solver.computeHGuess(XgInit)
   
-  
   solver.H = HGuess
   solver.u = uGuess  
-  
-# solver.u = numpy.zeros(solver.H.shape)
-# solver.ux = numpy.zeros(solver.H.shape)
-  solver.oldH = solver.H
-  solver.oldXg = solver.xg
 
  # Check (reinitializing) uGuess using Picard iteration 
   innerConverged = False
@@ -190,6 +181,9 @@ if(options.inFile == "none" or options.inFile == "zero"):
       innerConverged = True
       break
 
+  solver.innerConverged = innerConverged
+  solver.xg = solver.updateXg(solver.H,solver.Hf)
+
   if not innerConverged:
     print "Warning: initial velocity did not converge after %i steps!"%maxInitSteps
     
@@ -206,10 +200,7 @@ else:
 if(maxSteps == 0):
   exit()
 
-solver.oldH = solver.H    # meaning previous time step
-solver.oldXg = solver.xg  # meaning previous time step
 
-dt = options.dt
 
 print "initial solver:"
 pprint(solver.__dict__)
@@ -218,21 +209,15 @@ converged = False
 
 toleranceInner = maxToleranceInner
 
-#tol_out_H = 1e-1*solver.dt*solver.tBar*solver.aBar/solver.HBar
-#tol_out_xg = 1e-3*solver.dt*solver.tBar*solver.aBar/solver.xBar
-tol_out_dH_dt = 1e-1/solver.sPerY/solver.aBar # tolerance in non-dimensional unit
-tol_out_dxg_dt = 1e-3/solver.sPerY/solver.uBar
+tol_out_dH_dt = 1e-1/solver.sPerY/solver.aBar # tolerance equivaent to 0.1 m/yr
+tol_out_dxg_dt = 1e-3/solver.sPerY/solver.uBar # tolerance equivaent to 0.1 mm/yr (MISMIP)
 
 
 
 for outer in range(maxSteps):
-#  solver.oldH = solver.H
-#  solver.oldXg = solver.xg
-#  solver.oldU = solver.u
   
   innerConverged = False
   
-#  newH = solver.solveCont(solver.H, solver.u, HPrev, solver.dt, firstIter)
   solver.xg = solver.updateXg(solver.H,solver.Hf)
 
   prevU = solver.u
@@ -242,17 +227,12 @@ for outer in range(maxSteps):
   (Hkp1,ukp1) = solver.step(solver.H, solver.u, prevH, dt)
   
   solver.xg = solver.updateXg(Hkp1,solver.Hf)
-  
-  #    diffH = numpy.amax(numpy.abs(newH-prevH))/numpy.amax(newH)
-  #    diffXg = numpy.abs(newXg-solver.xg)/newXg
-  #    diffU = numpy.amax(numpy.abs(prevU-solver.u))/numpy.amax(numpy.abs(solver.u))
-  
+   
   dH_dt = numpy.linalg.norm(Hkp1-prevH)/dt
   dxg_dt = numpy.abs(solver.xg-prevXg)/dt
   solver.u = ukp1
   solver.H = Hkp1
   
-  #    dxg_dt = (newXg- solver.oldXg)/solver.dt
   cfl = numpy.amax(numpy.abs(solver.u/deltaX))*dt
   print "dH_dt = ",dH_dt, "dxg_dt = ",dxg_dt, "CFL = ",cfl
   
@@ -268,19 +248,7 @@ for outer in range(maxSteps):
 #    print "diffU=,",diffU
     exit(1)
   
-#  newH = solver.solveCont(solver.H, solver.u, HPrev, solver.dt, firstIter)
-#  solver.H = newH  
-#  newXg = solver.updateXg(newH,solver.Hf)
-#  solver.xg = newXg  
-  
-#  dH_dt = (newH-solver.oldH)/solver.dt
-#  prev_dH_dt = dH_dt
-#  prev_du_dt = (solver.u-solver.oldU)/solver.dt
-#  dxg_dt = (newXg-solver.oldXg)/solver.dt
-  #prev_dxg_dt = dxg_dt
-  #print "prev_dxg_dt:", prev_dxg_dt
-#  diffH = numpy.amax(numpy.abs(dH_dt))
-#  diffXg = numpy.abs(dxg_dt)
+
   solver.time += dt
   if(dH_dt < tol_out_dH_dt and dxg_dt < tol_out_dxg_dt):
     converged = True

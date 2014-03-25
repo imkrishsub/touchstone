@@ -13,7 +13,7 @@ import numpy.linalg
 import matplotlib.pyplot as plt
 
 class Solver:
-  def __init__(self, Nx,deltaX,xc,p,A,linearBed,linearSlope,useGLP):
+  def __init__(self, Nx,deltaX,xc,p,A,C,lambda_0,a,linearBed,linearSlope,rho_i,useGLP,eps_s):
     if(linearBed):
       self.computeB = self.computeBLinear
     else:
@@ -50,7 +50,6 @@ class Solver:
     self.useGLP = False
     self.transient = True
     self.maxPicardIter = 200
-    self.maxPicardInner = 1
     
     self.sPerY = 365.25*24.*3600. # number of seconds per year
     self.aBar = .3/self.sPerY # m.s-1 accumulation rate
@@ -193,8 +192,8 @@ class Solver:
         
     lambda_g = (1. - fPattyn[glIndices])/(fPattyn[glIndices+1] - fPattyn[glIndices])
     
-    
     return (groundedMaskH,floatingMaskH,groundedMaskU,floatingMaskU,glIndices,lambda_g)
+ 
  
 
   def iteratePicardTau(self, Hk, uk):
@@ -338,7 +337,7 @@ class Solver:
         plt.draw()
 
     self.u = ukp1
-    self.resStress = numpy.linalg.norm(resTau_kp1)
+    self.resStress = numpy.linalg.norm(resTau_k)
 #    self.resStress = numpy.max(numpy.abs(resTau_k2))
     #return (ukp1,numpy.max(numpy.abs(resTau_k2)))
     
@@ -403,24 +402,11 @@ class Solver:
   
     Hk = HGuess
     uk = uGuess
-#    (self.groundedMaskH,self.floatingMaskH,self.groundedMaskU,self.floatingMaskU,
-#     self.glIndices,self.lambda_g) \
-#      = self.getFlotationMasks(Hk)
-#
-#    (groundedMaskHPrev,floatingMaskHPrev,groundedMaskUPrev,
-#     floatingMaskUPrev,
-#     self.glIndicesPrev,self.lambda_gPrev) \
-#      = self.getFlotationMasks(HPrev)
-#    (self.sPrev,sxPrev) = self.computeSx(HPrev,floatingMaskHPrev,
-#        floatingMaskUPrev,self.glIndicesPrev,self.lambda_gPrev)
    
     for iterIndex in range(self.maxPicardIter):
-#      (groundedMaskH,floatingMaskH,groundedMaskU,floatingMaskU,glIndices,lambda_g) \
-#        = self.getFlotationMasks(Hk)
 
-      for inner in range(self.maxPicardInner):
-        self.iteratePicardTau(Hk, uk)
-        uk = self.u # it's really ukp1
+      self.iteratePicardTau(Hk, uk)
+      uk = self.u # it's really ukp1
         
 #      if (iterIndex==1):
 #          firstIter = True
@@ -430,7 +416,7 @@ class Solver:
       Hkp1 = self.solveCont(Hk, uk, HPrev, deltaT, (iterIndex == 0))
         
 #      tolerance = numpy.maximum(self.tolerance,2*self.noiseFloor)
-      tolerance = 1e-8  
+      tolerance = 1e-3  
       #print 'resTau, tol:', resTau, tolerance
       if(self.plot and not self.plotContinuous):
         plt.ioff()
