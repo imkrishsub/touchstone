@@ -52,8 +52,8 @@ class Solver:
     self.maxPicardIter = 200
     self.maxPicardInner = 1
     
-    sPerY = 365.25*24.*3600. # number of seconds per year
-    self.aBar = .3/sPerY # m.s-1 accumulation rate
+    self.sPerY = 365.25*24.*3600. # number of seconds per year
+    self.aBar = .3/self.sPerY # m.s-1 accumulation rate
     self.HBar = 1000. # m hight scaling factor
     self.xBar = 1000000. # m domain scaling factor
     self.WBar = 10000. # m channel width scaling factor
