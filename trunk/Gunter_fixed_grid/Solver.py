@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jul 21 15:37:32 2013
-
-@author: xylar
-"""
-from pprint import pprint
+#from pprint import pprint
 import numpy
 import scipy.sparse
 import scipy.sparse.linalg
@@ -423,6 +417,7 @@ class Solver:
         plt.show()  
         
       #print resTau, tolerance
+      #print "resStress", self.resStress
       #test residuals for convergence...
       if((self.resStress < tolerance) and iterIndex > 0):
         print 'Picard converged in %i iterations.'%iterIndex
@@ -436,6 +431,7 @@ class Solver:
       Hk = Hkp1
       #uk = ukp1
       
+    self.innerConverged = False
     print 'Warning:Picard iteration did not converge in', self.maxPicardIter, 'iterations. resStress:', self.resStress, 'tol:', tolerance
     #raise ValueError('Picard did not converge in %i iterations.'%self.maxPicardIter)
     return (Hkp1,uk)
