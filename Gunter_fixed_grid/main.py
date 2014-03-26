@@ -21,7 +21,7 @@ def readResults(fileName, solver):
   solver.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
   solver.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
   solver.H = numpy.fromfile(filePointer, dtype=float, count=Nx)
-  solver.updateH(solver.H,solver.xg)
+  solver.xg = solver.updateXg(solver.H,solver.Hf)
   solver.u = numpy.fromfile(filePointer, dtype=float, count=Nx)
 #  solver.ux = numpy.dot(solver.Dxu,solver.u)
   filePointer.close()
@@ -218,7 +218,7 @@ for outer in range(maxSteps):
   
   innerConverged = False
   
-  solver.xg = solver.updateXg(solver.H,solver.Hf)
+  #solver.xg = solver.updateXg(solver.H,solver.Hf)
 
   prevU = solver.u
   prevH = solver.H
