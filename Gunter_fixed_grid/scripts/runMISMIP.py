@@ -27,6 +27,6 @@ for caseIndex in range(ACount):
   print "running case %s/%s."%(dir,prefix)
   status = subprocess.call(args)
   if status != 0:
-    print "strict failed! Exiting."
+    print "runOneCase.py failed! Exiting."
     exit(status)  
   

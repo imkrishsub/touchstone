@@ -30,9 +30,7 @@ if(not os.path.exists(dir)):
   os.makedirs(dir)
 os.chdir(dir)
 
-initFile="%s_init"%prefix
-looseFile="%s_loose"%prefix
-strictFile="%s_strict"%prefix
+inProgressFile="%s_inProgress"%prefix
 finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
@@ -54,63 +52,35 @@ else:
     print "exiting: input file", inputFile, "not found."
     exit(1)
 
+if (restartFile == "%s.pyda"%finalFile):
+  print "already done"
+  exit(0)
 
 if (restartFile == "none"):
   print "init"
-  logFile = open("%s.log"%initFile,'w')
-  errFile = open("%s.err"%initFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%initFile, "--eps_s=1e-3", 
-    "--maxStep=0", "--maxToleranceInner=1e-3"]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "init failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%initFile
 else:
   print "restarting from file:", restartFile
 
-if (restartFile != "%s.pyda"%strictFile) and ( restartFile != "%s.pyda"%finalFile): 
-  print "loose from", restartFile
-  logFile = open("%s.log"%looseFile,'w')
-  errFile = open("%s.err"%looseFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%looseFile, "--eps_s=1e-3", 
-    "--maxStep=100000", "--maxToleranceInner=1e-3", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%looseTolerance, "--toleranceXg=%s"%looseTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "loose failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%looseFile
+logFile = open("%s.log"%inProgressFile,'w')
+errFile = open("%s.err"%inProgressFile,'w')
+args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--eps_s=1e-8", 
+  "--maxStep=100000", "--inFile=%s"%restartFile]
+status = subprocess.call(args, stdout=logFile, stderr=errFile)
+logFile.close()
+errFile.close()
+if status != 0:
+  print "run failed! Exiting."
+  exit(status)
+restartFile="%s.pyda"%inProgressFile
 
-if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile): 
-  print "strict from", restartFile
-  logFile = open("%s.log"%strictFile,'w')
-  errFile = open("%s.err"%strictFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%strictFile, "--eps_s=1e-8", 
-    "--maxStep=100000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "strict failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%strictFile
-
-if (restartFile == "%s.pyda"%strictFile):
-  print "final from", restartFile
-  logFile = open("%s.log"%finalFile,'w')
-  errFile = open("%s.err"%finalFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
-    "--maxStep=1000", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "final failed! Exiting."
-    exit(status)
+print "final"
+logFile = open("%s.log"%finalFile,'w')
+errFile = open("%s.err"%finalFile,'w')
+args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
+  "--maxStep=100000", "--inFile=%s"%restartFile]
+status = subprocess.call(args, stdout=logFile, stderr=errFile)
+logFile.close()
+errFile.close()
+if status != 0:
+  print "final failed! Exiting."
+  exit(status)

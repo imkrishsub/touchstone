@@ -1,7 +1,7 @@
 #!/bin/bash
 
 shopt -s nullglob
-initFiles=p*/*/*init.log
+initFiles=p*/*/*inProgress.log
 for initFile in $initFiles
 do
   IFS='/' read pFolder resFolder fileName <<< "$initFile"
@@ -15,15 +15,9 @@ do
   if [[ -f ${prefix}_final.log ]] ; then
     logFile=${prefix}_final.log
     echo $prefix: final
-  elif [[ -f ${prefix}_strict.log ]] ; then
-    logFile=${prefix}_strict.log
-    echo $prefix: strict
-  elif [[ -f ${prefix}_loose.log ]] ; then
-    logFile=${prefix}_loose.log
-    echo $prefix: loose
   else
-    logFile=${prefix}_init.log
-    echo $prefix: init
+    logFile=${prefix}_inProgress.log
+    echo $prefix: in progress
   fi
   result=`grep blew "$logFile"`
   if [[ -n $result ]] ; then
