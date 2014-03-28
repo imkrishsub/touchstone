@@ -34,9 +34,6 @@ inProgressFile="%s_inProgress"%prefix
 finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
-looseTolerance='1e-3'
-strictTolerance='1e-6'
-
 commonArgs = ["python", "../../code/main.py"] \
   + commonArgs \
   + ["--folder=.", "--filePointer=%s"%filePointer]
