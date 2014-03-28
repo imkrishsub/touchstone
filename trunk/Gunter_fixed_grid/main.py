@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import numpy
+#import numpy
 from Solver import Solver
 from optparse import OptionParser
 

@@ -3,8 +3,8 @@ import numpy
 import scipy.sparse
 import scipy.sparse.linalg
 import numpy.linalg
-
-import matplotlib.pyplot as plt
+import os.path
+#import matplotlib.pyplot as plt
 
 class Solver:
   def __init__(self, options):
@@ -16,7 +16,7 @@ class Solver:
     self.deltaX = options.deltaX
     self.dt = options.dt
     self.xc = options.xc
-    self.xu = numpy.linspace(0,xc,Nx)
+    self.xu = numpy.linspace(0,self.xc,self.Nx)
     self.xH = self.xu-0.5*self.deltaX
     self.rho_i = options.rho_i 
     self.rho_w = options.rho_w 
@@ -61,10 +61,10 @@ class Solver:
     self.Kappa = (self.m_0*self.uBar)/(self.lambda_0*self.Ab)/self.NBar**self.n
     self.gamma = self.taubBar/self.taudBar
 
-    self.taulBar = (A**(-1./self.n))*(self.uBar/self.xBar)**(1./self.n)*self.HBar/self.xBar
+    self.taulBar = (self.A**(-1./self.n))*(self.uBar/self.xBar)**(1./self.n)*self.HBar/self.xBar
     self.epsilon = self.taulBar/(2*self.taudBar)
 
-    self.tauWbar = self.HBar/self.WBar*(5*self.uBar/(2*A*self.WBar))**(1./self.n)
+    self.tauWbar = self.HBar/self.WBar*(5*self.uBar/(2*self.A*self.WBar))**(1./self.n)
     self.omega = self.tauWbar/self.taudBar
     
     self.outFile = options.outFile
@@ -130,9 +130,9 @@ class Solver:
         exit(1)
       self.readResults(options.inFile)
 
-  def makeInitialCondition(self, inFile, xgInit, maxInitSteps, initUTolerance)
+  def makeInitialCondition(self, inFile, xgInit, maxInitSteps, initUTolerance):
     self.time = 0
-    if(options.inFile == "none"):
+    if(inFile == "none"):
       (HGuess,uGuess) = self.computeHGuess(xgInit)
     else:
       HGuess = 1e-4*numpy.ones(self.xH)
@@ -149,6 +149,7 @@ class Solver:
       self.iteratePicardTau(self.H, self.u)
       diffU = numpy.amax(numpy.abs(prevU-self.u))/numpy.amax(numpy.abs(self.u))
       if(self.plot):
+        import matplotlib.pyplot as plt
         if(self.plotContinuous):
           plt.draw()
         else:
@@ -267,7 +268,7 @@ class Solver:
     eps_s.tofile(filePointer)
     filePointer.close()
     filePointer = open(self.filePointer,'w')
-    filePointer.write("%s\n"%outFileName)
+    filePointer.write("%s\n"%self.outFile)
     filePointer.close()
 
   def computeBLinear(self,x):
@@ -319,14 +320,14 @@ class Solver:
     
     sx = self.DxH.dot(s)
     sx_floating = self.DxH.dot(s_floating)
-    sx[floatingMaskU] = sx_floating[self.floatingMaskU]
+    sx[self.floatingMaskU] = sx_floating[self.floatingMaskU]
     
     if(self.useGLP):
         sx[self.glIndices] = self.lambda_g*sx[self.glIndices] \
         + (1. - self.lambda_g)*sx_floating[self.glIndices]
     
     self.s = s
-    self.sx = s
+    self.sx = sx
     
     
   def updateXgAndFlotationMasks(self):
@@ -353,8 +354,7 @@ class Solver:
     p = self.p
     n = self.n # Glen's flow parameter
     #xH = self.xH
-    xu = self.xu
-    Hf = self.Hf
+    #xu = self.xu
     Hk = self.H
     uk = self.u
     
@@ -455,27 +455,13 @@ class Solver:
     resTau_k /= norm
     #print 'tau res k:', numpy.amax(numpy.abs(resTau_k))
        
-    resTau_k2 = (M.dot(uk) - rhs)/norm
+    #resTau_k2 = (M.dot(uk) - rhs)/norm
    
     ukp1 = scipy.sparse.linalg.spsolve(M,rhs)
     
     resTau_kp1 = (M.dot(ukp1) - rhs)/norm
     self.noiseFloor = numpy.amax(numpy.abs(resTau_kp1))
     #print 'tau solver res (noise floor):', self.noiseFloor
-    
-    if(self.plot):
-      fig = plt.figure(1)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
-      plt.plot(xu,uk, 'b', xu,ukp1, 'r')        
-      fig = plt.figure(2)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
-      plt.plot(xu,longi_k, 'b', xu, basal_k, 'r', xu, driving_k, 'g', xu, resTau_k*norm, 'k',
-               xu, resTau_k2*norm, 'k--')
-
-      if(self.plotContinuous):
-        plt.draw()
 
     self.u = ukp1
     self.resStress = numpy.linalg.norm(resTau_k)
@@ -487,7 +473,7 @@ class Solver:
     ukp1 = self.u
     
     a = self.a # non-dimensional accumulation
-    Hxk = self.DxH.dot(Hk)
+    #Hxk = self.DxH.dot(Hk)
     
    
     # build the up-wind matrix
@@ -533,10 +519,7 @@ class Solver:
     
     
     
-  def step(self):
-    if(self.plotContinuous):
-      plt.ion()
-  
+  def step(self):  
     for iterIndex in range(self.maxPicardIter):
 
       self.iterateOnViscosity()
@@ -563,9 +546,7 @@ class Solver:
     self.updateXgAndFlotationMasks()
       
     for outer in range(maxSteps):
-  
-      innerConverged = False
-  
+    
       self.prevU = self.u
       self.prevH = self.H
       self.prevXg = self.xg
@@ -575,7 +556,7 @@ class Solver:
       dH_dt = numpy.amax(numpy.abs(self.H-self.prevH))/self.dt
       dxg_dt = numpy.abs(self.xg-self.prevXg)/self.dt
   
-      cfl = numpy.amax(numpy.abs(self.u/deltaX))*self.dt
+      cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
       print "dH_dt = ",dH_dt, "dxg_dt = ",dxg_dt, "CFL = ",cfl
   
       if numpy.isnan(cfl):
