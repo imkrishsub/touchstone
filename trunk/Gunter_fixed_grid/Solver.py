@@ -313,6 +313,74 @@ class Solver:
 #    u_H[1:] = 0.5*(u[1:]+u[0:-1])
 #    return u_H
 
+  def plotIter(self,outer,inner):
+    if(not self.plot):
+      return
+      
+    import matplotlib.pyplot as plt
+    if(self.plotContinuous):
+      plt.ion()
+        
+    plt.figure(1, figsize=(16, 12))
+    dH_dt = (self.H-self.HPrev)/self.dt
+    dxg_dt = (self.xg-self.xgPrev)/self.dt
+    du_dt = (self.u-self.uPrev)/self.dt
+    
+    ax = plt.subplot(2,3,1)
+    ax.cla()
+    s = self.H-self.b
+    s[self.floatingMaskH]=self.delta*self.H[self.floatingMaskH]
+    sPrev = self.HPrev-self.b
+    mask = self.HPrev < self.Hf
+    sPrev[mask] = self.delta*self.HPrev[mask]
+    plt.plot(self.xH,s, 'r', self.xH, -self.b, 'k', 
+             self.xH, self.Hf-self.b, 'g',self.xH, sPrev,'b')
+             
+    ax = plt.subplot(2,3,2)
+    ax.cla()
+    plt.plot(self.xu[1:-1], self.resTau_kp1[1:-1],'b', 
+             self.xu[1:-1], self.resTau_k[1:-1], 'r')
+    ax = plt.subplot(2,3,3)
+    ax.cla()
+    plt.plot(self.xu, self.longi, 'b', self.xu, self.basal, 'r', 
+             self.xu, self.driving, 'g', self.xu, self.resTau, 'k')
+    ax = plt.subplot(2,3,4)
+    ax.cla()
+    plt.plot(self.xu,self.u, 'b', self.xu, self.uPrev, 'r')
+    plt.ylim(numpy.amin(self.u),numpy.amax(self.u))
+
+    ax = plt.subplot(2,3,5)
+    ax.cla()
+    plt.plot(self.xH,dH_dt, 'b')
+    plt.plot(self.xu,du_dt, 'r')
+    
+    ax = plt.subplot(2,3,6)
+    ax.cla()
+    plt.plot(self.xH, dH_dt, 'b', 
+             self.xH, self.Dxu.dot(self.H*self.u), 'k', 
+             self.xH, self.a*numpy.ones(self.xH.shape), 'r')
+   
+
+    cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
+    plt.subplot(2,3,1)
+    plt.title('outer: %i inner: %i'%(outer, inner))
+    plt.subplot(2,3,2)
+    plt.title('CFL=%.2f'%cfl)
+    plt.subplot(2,3,3)
+    plt.title('resStress: %.4g tol.: %.4g'%(self.resStress, self.toleranceInner))
+    plt.subplot(2,3,4)
+    plt.title('lambda_g=%.4g xg=%.6g'%(self.lambda_g, self.xg))
+    plt.subplot(2,3,5)
+    plt.title('dxg/dt=%.4g tol.: %.4g'%(dxg_dt, self.tol_out_dxg_dt))
+    plt.subplot(2,3,6)
+    plt.title('|dH/dt|=%.4g tol.: %.4g'%(numpy.amax(numpy.abs(dH_dt)),self.tol_out_dH_dt))
+    if(self.plotContinuous):
+      plt.draw()
+    else:
+      plt.show()
+
+        
+        
   def computeSx(self):
     s = self.H-self.b
     s_floating = self.delta*self.H
@@ -425,9 +493,9 @@ class Solver:
     lateral_k = lateralCoeff*uk
     self.lateral = lateral_k
 
-    resTau_k = longi_k + basal_k + driving_k + lateral_k
-    resTau_k[0] = uk[0]
-    resTau_k[-1] = uxk[-1] - calving_ux
+    self.resTau_k = longi_k + basal_k + driving_k + lateral_k
+    self.resTau_k[0] = uk[0]
+    self.resTau_k[-1] = uxk[-1] - calving_ux
     
     # Setting up the matrix system to solve
 
@@ -452,19 +520,19 @@ class Solver:
     
     norm = numpy.amax(numpy.abs(driving_k))
 #    print "norm",norm
-    resTau_k /= norm
+    self.resTau_k /= norm
     #print 'tau res k:', numpy.amax(numpy.abs(resTau_k))
        
     #resTau_k2 = (M.dot(uk) - rhs)/norm
    
     ukp1 = scipy.sparse.linalg.spsolve(M,rhs)
     
-    resTau_kp1 = (M.dot(ukp1) - rhs)/norm
-    self.noiseFloor = numpy.amax(numpy.abs(resTau_kp1))
+    self.resTau_kp1 = (M.dot(ukp1) - rhs)/norm
+    self.noiseFloor = numpy.amax(numpy.abs(self.resTau_kp1))
     #print 'tau solver res (noise floor):', self.noiseFloor
 
     self.u = ukp1
-    self.resStress = numpy.linalg.norm(resTau_k)
+    self.resStress = numpy.amax(numpy.abs(self.resTau_k))
     
     
     
@@ -519,12 +587,14 @@ class Solver:
     
     
     
-  def step(self):  
+  def step(self,outer):  
     for iterIndex in range(self.maxPicardIter):
 
       self.iterateOnViscosity()
       self.solveCont()
       self.upateXgAndFlotationMasks()
+      
+      self.plotIter(outer,iterIndex)
         
       #print resTau, tolerance
       #print "resStress", self.resStress
@@ -541,6 +611,7 @@ class Solver:
 
     
   def runTimeStepping(self,maxSteps,stepsPerWrite):
+
     converged = False
     
     self.updateXgAndFlotationMasks()
@@ -551,7 +622,7 @@ class Solver:
       self.prevH = self.H
       self.prevXg = self.xg
   
-      self.step()
+      self.step(outer)
   
       dH_dt = numpy.amax(numpy.abs(self.H-self.prevH))/self.dt
       dxg_dt = numpy.abs(self.xg-self.prevXg)/self.dt
