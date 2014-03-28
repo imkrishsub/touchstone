@@ -73,17 +73,6 @@ class Solver:
     #print 'gamma, Kappa, epsilon, omega:', self.gamma, self.Kappa, self.epsilon, self.omega
 
 
-    (self.b,self.bx) = self.computeB(self.xH)
-    #print 'b:', self.b
-    self.Hf = self.maxS(self.b)/(1-self.delta)
-    self.bx = self.DxH.dot(self.b)
-    
-    print "options:"
-    pprint(options.__dict__)
-    
-    print "self:"
-    pprint(self.__dict__)    
-    
     diagonals = []
     diag0 = -1./self.deltaX*numpy.ones((self.Nx),float)
     diag0[-1] = 0
@@ -116,6 +105,17 @@ class Solver:
     diagonals.append(diag1)
     self.Avgu = scipy.sparse.diags(diagonals, [0,-1], shape=(self.Nx,self.Nx), format='csr')
 
+    (self.b,self.bx) = self.computeB(self.xH)
+    #print 'b:', self.b
+    self.Hf = self.maxS(self.b)/(1-self.delta)
+    self.bx = self.DxH.dot(self.b)
+    
+    print "options:"
+    pprint(options.__dict__)
+    
+    print "self:"
+    pprint(self.__dict__)    
+    
     if(self.plot):
       import matplotlib.pyplot as plt
 
@@ -123,7 +123,7 @@ class Solver:
       plt.ion()
       
     if(options.inFile == "none" or options.inFile == "zero"):
-      self.makeInitialConditin(options.inFile, options.xgInit, options.maxInitSteps,options.initUTolerance)
+      self.makeInitialCondition(options.inFile, options.xgInit, options.maxInitSteps,options.initUTolerance)
     else:
       if(not os.path.exists(options.inFile)):
         print "File not found:", options.inFile
@@ -139,28 +139,26 @@ class Solver:
       uGuess = 1e-4*numpy.ones(self.xu)
   
     self.H = HGuess
-    self.u = uGuess  
+    self.u = uGuess
+    self.updateXgAndFlotationMasks()
+    self.HPrev = self.H
+    self.uPrev = self.u
+    self.xgPrev = self.xg
 
    # Check (reinitializing) uGuess using Picard iteration 
     innerConverged = False
     print "Computing initial u by iterating on viscosity:"
     for inner in range(maxInitSteps):
       prevU = self.u
-      self.iteratePicardTau(self.H, self.u)
+      self.iterateOnViscosity()
       diffU = numpy.amax(numpy.abs(prevU-self.u))/numpy.amax(numpy.abs(self.u))
-      if(self.plot):
-        import matplotlib.pyplot as plt
-        if(self.plotContinuous):
-          plt.draw()
-        else:
-          plt.show()
+      self.plotIter(0,inner)
       print "iter: ", inner, "diffU:", diffU, "resStress: ", self.resStress
       if(diffU < initUTolerance):
         innerConverged = True
         break
 
     self.innerConverged = innerConverged
-    self.xg = self.updateXg(self.H,self.Hf)
 
     if not innerConverged:
       print "Warning: initial velocity did not converge after %i steps!"%maxInitSteps
@@ -209,7 +207,7 @@ class Solver:
         HPrev = Hi
         Hi = 0.5*(-deltaB + numpy.sqrt(deltaB**2-4*(-Hip1**2 +Hip1*deltaB + 2*self.deltaX*taub)))
         deltaH = numpy.abs(Hi-HPrev)
-        if(deltaH < self.tolerance):
+        if(deltaH < self.toleranceInner):
           break
       #print "deltaH:", Hi-HPrev, Hi, Hip1
       Hip1 = Hi
@@ -230,7 +228,7 @@ class Solver:
     self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
     self.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
     self.H = numpy.fromfile(filePointer, dtype=float, count=Nx)
-    self.xg = self.updateXg(self.H,self.Hf)
+    self.updateXgAndFlotationMasks()
     self.u = numpy.fromfile(filePointer, dtype=float, count=Nx)
     filePointer.close()
 
@@ -343,7 +341,7 @@ class Solver:
     ax = plt.subplot(2,3,3)
     ax.cla()
     plt.plot(self.xu, self.longi, 'b', self.xu, self.basal, 'r', 
-             self.xu, self.driving, 'g', self.xu, self.resTau, 'k')
+             self.xu, self.driving, 'g', self.xu, self.resTau_k, 'k')
     ax = plt.subplot(2,3,4)
     ax.cla()
     plt.plot(self.xu,self.u, 'b', self.xu, self.uPrev, 'r')
@@ -592,7 +590,7 @@ class Solver:
 
       self.iterateOnViscosity()
       self.solveCont()
-      self.upateXgAndFlotationMasks()
+      self.updateXgAndFlotationMasks()
       
       self.plotIter(outer,iterIndex)
         
@@ -618,14 +616,14 @@ class Solver:
       
     for outer in range(maxSteps):
     
-      self.prevU = self.u
-      self.prevH = self.H
-      self.prevXg = self.xg
+      self.uPrev = self.u
+      self.HPrev = self.H
+      self.xgPrev = self.xg
   
       self.step(outer)
   
-      dH_dt = numpy.amax(numpy.abs(self.H-self.prevH))/self.dt
-      dxg_dt = numpy.abs(self.xg-self.prevXg)/self.dt
+      dH_dt = numpy.amax(numpy.abs(self.H-self.HPrev))/self.dt
+      dxg_dt = numpy.abs(self.xg-self.xgPrev)/self.dt
   
       cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
       print "dH_dt = ",dH_dt, "dxg_dt = ",dxg_dt, "CFL = ",cfl

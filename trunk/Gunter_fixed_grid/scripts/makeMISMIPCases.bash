@@ -24,7 +24,7 @@ do
       4.6416e-26 2.1544e-26 1.0000e-26
     do
       prefix=A_${A}_adv
-      commonArgs="--folder=. --p=$p --A=$A --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --dt=$dt --deltaX=$dx --Nx=$Nx --xc=$xc --plot --plotContinuous"
+      commonArgs="--folder=. --p=$p --A=$A --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --dt=$dt --deltaX=${dx}e-3 --Nx=$Nx --xc=$xc --plot --plotContinuous"
       echo p_$p/res_$dx >> $fileName
       echo $prefix >> $fileName
       echo $prevResult >> $fileName
@@ -35,7 +35,7 @@ do
       2.1544e-24 4.6416e-24
     do
       prefix=A_${A}_ret
-      commonArgs="--folder=. --p=$p --A=$A --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --dt=$dt --deltaX=$dx --Nx=$Nx --xc=$xc --plot --plotContinuous"
+      commonArgs="--folder=. --p=$p --A=$A --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --dt=$dt --deltaX=${dx}e-3 --Nx=$Nx --xc=$xc --plot --plotContinuous"
       echo p_$p/res_$dx >> $fileName
       echo $prefix >> $fileName
       echo $prevResult >> $fileName

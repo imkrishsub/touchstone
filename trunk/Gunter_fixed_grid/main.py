@@ -19,9 +19,10 @@ parser.add_option("--rho_w", type="float", default=1000.0, dest="rho_w") # kg/m^
 parser.add_option("--a", type="float", default=1.0, dest="a")
 parser.add_option("--g", type="float", default=9.8, dest="g")
 parser.add_option("--n", type="float", default=3.0, dest="n")
-parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab") #Pa^-3 s^-1
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
 parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
+parser.add_option("--m_0", type="float", default=2.0, dest="m_0")
+parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab") #Pa^-3 s^-1
 parser.add_option("--poly", action="store_true", dest="poly")
 parser.add_option("--useGLP", action="store_false", dest="useGLP")
 
