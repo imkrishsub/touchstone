@@ -13,7 +13,7 @@ xc=1.760
 dxs=( 3.2 1.6 0.8 0.4 0.2 0.1 )
 Nxs=( 551 1101 2201 4401 8801 17601 )
 
-for resIndex in $(seq 0 5)
+for ((resIndex=0; resIndex<=5; resIndex++))
 do
   for p in 0.00 0.25 0.50 0.75 1.00
   do
