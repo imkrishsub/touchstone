@@ -457,7 +457,7 @@ class Solver:
     # setting up Tau_l        
     
     longiCoeff = 4*Hk*nuk
-    if(not self.useLongi):
+    if(self.useLongi):
       longiCoeff[self.groundedMaskU] = 0.
       
 
