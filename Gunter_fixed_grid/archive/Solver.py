@@ -214,7 +214,6 @@ class Solver:
       H[xIndex] = Hi
       u[xIndex] = umid
     
-  
     return (H,u)
     
   def readResults(self, fileName):
@@ -457,7 +456,8 @@ class Solver:
     # setting up Tau_l        
     
     longiCoeff = 4*Hk*nuk
-    if(not self.useLongi):
+#    if(not self.useLongi):
+    if(self.useLongi):
       longiCoeff[self.groundedMaskU] = 0.
       
 
@@ -573,6 +573,7 @@ class Solver:
     
 
     rhs = a + self.HPrev/self.dt 
+#    rhs = a + self.H/self.dt 
     rhs[0] = 0.
       
     Hkp1 = scipy.sparse.linalg.spsolve(M,rhs)

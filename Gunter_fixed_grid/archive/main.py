@@ -34,7 +34,7 @@ parser.add_option("--filePointer", type="string", default="default.pointer", des
 parser.add_option("--Nx", type="int", default=1321, dest="Nx")
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
 parser.add_option("--deltaX", type="float", default=1.6e-3, dest="deltaX") # m
-parser.add_option("--maxSteps", type="int", default=2000, dest="maxSteps")
+parser.add_option("--maxSteps", type="int", default=20000, dest="maxSteps")
 parser.add_option("--maxInnerSteps", type="int", default=200, dest="maxInnerSteps")
 parser.add_option("--maxInitSteps", type="int", default=200, dest="maxInitSteps")
 parser.add_option("--stepsPerWrite", type="int", default=10, dest="stepsPerWrite")
@@ -44,8 +44,8 @@ parser.add_option("--toleranceH", type="float", default=0.1, dest="toleranceH") 
 parser.add_option("--toleranceXg", type="float", default=1e-3, dest="toleranceXg")  # m/yr
 parser.add_option("--toleranceInner", type="float", default=1e-3, dest="toleranceInner")
 parser.add_option("--initUTolerance", type="float", default=1e-3, dest="initUTolerance")
-parser.add_option("--dt", type="float", default=1e-4, dest="dt")
-parser.add_option("--xgInit", type="float", default=1.0, dest="xgInit")
+parser.add_option("--dt", type="float", default=3e-4, dest="dt")
+parser.add_option("--xgInit", type="float", default=1.08, dest="xgInit")
 
 parser.add_option("--plot", action="store_true", dest="plot")
 parser.add_option("--plotContinuous", action="store_true", dest="plotContinuous")
