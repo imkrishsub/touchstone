@@ -1,3 +1,4 @@
+import numpy
 
 fileName = "allMISMIPCases.txt"
 
@@ -11,12 +12,14 @@ dxs = [ "3.2", "1.6", "0.8", "0.4", "0.2", "0.1", "0.05" ]
 Nxs = [ "551", "1101", "2201", "4401", "8801", "17601", "35201" ]
 #dts = [ "1e-4", "1e-4", "3e-4", "3e-4", "3e-4", "3e-4", "3e-4" ]
 dtInits = [ "1e-5", "1e-5", "1e-5", "1e-5", "1e-5", "1e-5", "1e-5" ]
-goalCFLs = [ "2", "4", "8", "16", "32", "64", "128" ]
+p0GoalCFLs = numpy.array([ 0.25, 0.5, 4., 8., 16., 32., 64.])
+p1GoalCFLs = 0.5*p0GoalCFLs
 
 As = [ "4.6416e-24", "2.1544e-24", "1.0000e-24", 
       "4.6416e-25", "2.1544e-25", "1.0000e-25", 
       "4.6416e-26", "2.1544e-26", "1.0000e-26" ]
-ps = [ "0.00", "0.25", "0.50", "0.75", "1.00" ]
+#ps = [ "0.00", "0.25", "0.50", "0.75", "1.00" ]
+ps = [ 0., 0.25, 0.5, 0.75, 1.]
 glpStrings = [ "", "--useGLP" ]
 glpDirs = [ "nonGLP", "GLP" ]
 commonArgs = "--folder=. --linearSlope=%s --C=%s --lambda_0=%s --eps_s=1e-8"%(slope_ref,C_ref,lambda_ref)
@@ -33,13 +36,13 @@ for resIndex in range(len(dxs)):
       dx = dxs[resIndex]
       #dt = dts[resIndex]
       dtInit = dtInits[resIndex]
-      goalCFL = goalCFLs[resIndex]
+      goalCFL = "%.2f"%((1.-p)*p0GoalCFLs[resIndex]+p*p1GoalCFLs[resIndex])
       prevResult = "none"
       for A in As:
-        dir = "%s/p_%s/res_%s"%(glpDir,p,dx)
+        dir = "%s/p_%.2f/res_%s"%(glpDir,p,dx)
 
         prefix = "A_%s_adv"%A
-        args = "%s --maxSteps=1000000 --p=%s --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s" \
+        args = "%s --maxSteps=1000000 --p=%.2f --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s" \
           %(commonArgs,p,A,dtInit,goalCFL,dx,Nx,xc,glpString)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
@@ -51,7 +54,7 @@ for resIndex in range(len(dxs)):
         dir = "%s/p_%s/res_%s"%(glpDir,p,dx)
 
         prefix = "A_%s_ret"%A
-        args = "%s --maxSteps=1000000 --p=%s --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s" \
+        args = "%s --maxSteps=1000000 --p=%.2f --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s" \
           %(commonArgs,p,A,dtInit,goalCFL,dx,Nx,xc,glpString)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
