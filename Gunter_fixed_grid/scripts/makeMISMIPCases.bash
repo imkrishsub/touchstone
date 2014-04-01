@@ -11,7 +11,7 @@ xc=1.760
 
 dxs=( 3.2 1.6 0.8 0.4 0.2 0.1 0.05 )
 Nxs=( 551 1101 2201 4401 8801 17601 35201 )
-dts=( 1e-4 1e-4 3e-4 3e-4 3e-4 3e-4 3e-4 )
+dts=( 1e-4 1e-4 2e-4 2e-4 2e-4 2e-4 2e-4 )
 glpStrings=( "" "--useGLP" )
 glpDirs=( nonGLP GLP)
 commonArgs="--folder=. --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --maxSteps=1000000"
@@ -25,7 +25,7 @@ do
     for ((glpIndex=0; glpIndex<=1; glpIndex++))
     do
       glpDir=${glpDirs[$glpIndex]}
-      glpstring=${glpStrings[$glpIndex]}
+      glpString=${glpStrings[$glpIndex]}
       Nx=${Nxs[$resIndex]}
       dx=${dxs[$resIndex]}
       dt=${dts[$resIndex]}
