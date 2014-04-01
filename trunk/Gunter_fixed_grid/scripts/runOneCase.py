@@ -34,7 +34,7 @@ inProgressFile="%s_inProgress"%prefix
 finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
-commonArgs = ["python", "../../code/main.py"] \
+commonArgs = ["python", "../../../code/main.py"] \
   + commonArgs \
   + ["--folder=.", "--filePointer=%s"%filePointer]
 

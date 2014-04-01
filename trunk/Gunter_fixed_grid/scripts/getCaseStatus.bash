@@ -1,17 +1,17 @@
 #!/bin/bash
 
 shopt -s nullglob
-initFiles=p*/*/*inProgress.log
+initFiles=*/p*/*/*inProgress.log
 for initFile in $initFiles
 do
-  IFS='/' read pFolder resFolder fileName <<< "$initFile"
+  IFS='/' read glpFolder pFolder resFolder fileName <<< "$initFile"
   IFS='_' read var value advRet ending <<< "$fileName"
   if [[ "$var" = "lambda" ]] ; then 
     IFS='_' read var extra value advRet ending <<< "$fileName"
     var=${var}_$extra
   fi
   expt=${var}_${value}_${advRet}
-  prefix=$pFolder/$resFolder/$expt
+  prefix=$glpFolder/$pFolder/$resFolder/$expt
   if [[ -f ${prefix}_final.log ]] ; then
     logFile=${prefix}_final.log
     echo $prefix: final
