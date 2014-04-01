@@ -1,7 +1,7 @@
 #PBS -S /bin/csh
 #PBS -q regular
-#PBS -l mppwidth=24
-#PBS -l walltime=24:00:00
+#PBS -l mppwidth=72
+#PBS -l walltime=4:00:00
 #PBS -N FixedGridMISMIP
 #PBS -A m1041
 #PBS -m ae
@@ -19,14 +19,14 @@ echo caseFile: $caseFile
 
 set caseLines = `wc -l < $caseFile`
 echo caseLines: $caseLines
-ACount=17
-let linesPerExpt=4*$ACount
-@ caseCount = ( $caseLines / linesPerExpt )
+set ACount = 17
+@ linesPerExpt = ( 8 * $ACount )
+@ caseCount = ( $caseLines / $linesPerExpt )
 
 echo caseCount: $caseCount
 
 set script = "python code/scripts/runMISMIP.py"
 echo script: $script
 
-tf -t $caseCount -n 1 -o $logDir/touchstoneCase%t.out \
+tf -t $caseCount -n 3 -o $logDir/touchstoneCase%t.out \
   -e $logDir/touchstoneCase%t.err $script $caseFile \$TF_TASKID
