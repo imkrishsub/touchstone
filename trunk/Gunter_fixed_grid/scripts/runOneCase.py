@@ -64,9 +64,11 @@ args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--inFile=%s"%restartFi
 status = subprocess.call(args, stdout=logFile, stderr=errFile)
 logFile.close()
 errFile.close()
-if status != 0:
+if status == 1:
   print "run failed! Exiting."
   exit(status)
+if status == 2:
+  print "warning: run did not converge.  Consider increasing maxSteps."
 restartFile="%s.pyda"%inProgressFile
 
 print "final"
@@ -76,6 +78,8 @@ args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--inFile=%s"%restartFile]
 status = subprocess.call(args, stdout=logFile, stderr=errFile)
 logFile.close()
 errFile.close()
-if status != 0:
+if status == 1:
   print "final failed! Exiting."
   exit(status)
+if status == 2:
+  print "warning: run did not converge.  Consider increasing maxSteps."
