@@ -23,9 +23,9 @@ for caseIndex in range(caseCount):
         error=True
         break
       if "Error" in line:
+        print "%i: %s/%s failed in final."%(mismipIndex,dir,prefix)
         error=True
         break
-        print "%i: %s/%s failed in final."%(mismipIndex,dir,prefix)
     if error:
       continue
 
@@ -38,9 +38,9 @@ for caseIndex in range(caseCount):
         error=True
         break
       if "Error" in line:
+        print "%i: %s/%s failed in inProgress."%(mismipIndex,dir,prefix)
         error=True
         break
-        print "%i: %s/%s failed in inProgress."%(mismipIndex,dir,prefix)
     if error:
       continue
     print "%i: %s/%s inProgress."%(mismipIndex,dir,prefix)
