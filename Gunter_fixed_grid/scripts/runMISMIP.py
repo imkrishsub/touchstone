@@ -16,7 +16,7 @@ caseList = [line.rstrip('\n') for line in open(caseFile)]
 
 ACount = 17
 for caseIndex in range(ACount):
-  lineIndex=4*(mismipIndex+caseIndex)
+  lineIndex=4*(ACount*mismipIndex+caseIndex)
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
   if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
