@@ -60,8 +60,7 @@ else:
 
 logFile = open("%s.log"%inProgressFile,'w')
 errFile = open("%s.err"%inProgressFile,'w')
-args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--eps_s=1e-8", 
-  "--maxStep=100000", "--inFile=%s"%restartFile]
+args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--inFile=%s"%restartFile]
 status = subprocess.call(args, stdout=logFile, stderr=errFile)
 logFile.close()
 errFile.close()
@@ -73,8 +72,7 @@ restartFile="%s.pyda"%inProgressFile
 print "final"
 logFile = open("%s.log"%finalFile,'w')
 errFile = open("%s.err"%finalFile,'w')
-args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
-  "--maxStep=100000", "--inFile=%s"%restartFile]
+args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--inFile=%s"%restartFile]
 status = subprocess.call(args, stdout=logFile, stderr=errFile)
 logFile.close()
 errFile.close()
