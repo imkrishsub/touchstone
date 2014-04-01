@@ -6,19 +6,19 @@ rm $fileName 2>/dev/null
 slope_ref=778.5
 C_ref=7.624e6
 lambda_ref=2.0
-dt=3e-4
+dt=1e-4
 xc=1.760
 
 
-dxs=( 3.2 1.6 0.8 0.4 0.2 0.1 )
-Nxs=( 551 1101 2201 4401 8801 17601 )
+dxs=( 3.2 1.6 0.8 0.4 0.2 0.1 0.05 )
+Nxs=( 551 1101 2201 4401 8801 17601 35201 )
 glpStrings=( "" "--useGLP" )
 glpDirs=( nonGLP GLP)
 commonArgs="--folder=. --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --maxSteps=1000000"
 # uncomment the following to include plotting
 #commonArgs="$commonArgs --plot --plotContinuous" 
 
-for ((resIndex=0; resIndex<=5; resIndex++))
+for ((resIndex=0; resIndex<=6; resIndex++))
 do
   for p in 0.00 0.25 0.50 0.75 1.00
   do
