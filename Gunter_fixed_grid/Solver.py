@@ -36,7 +36,7 @@ class Solver:
 
     self.plotContinuous = options.plotContinuous
     self.plot = options.plotContinuous
-    self.useLongi = options.useLongi
+    self.disableLongi = options.disableLongi
     self.useChannel = options.useChannel
     self.useSchoofBasal = options.useSchoofBasal
     self.useGLP = options.useGLP
@@ -457,7 +457,7 @@ class Solver:
     # setting up Tau_l        
     
     longiCoeff = 4*Hk*nuk
-    if(self.useLongi):
+    if(self.disableLongi):
       longiCoeff[self.groundedMaskU] = 0.
       
 
