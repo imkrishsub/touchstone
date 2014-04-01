@@ -413,7 +413,7 @@ class Solver:
     #print 'gl at index (or indices):', glIndices
         
     self.lambda_g = (1. - fPattyn[self.glIndices])/(fPattyn[self.glIndices+1] - fPattyn[self.glIndices])
-    self.xg = self.lambda_g*self.xH[self.glIndices-1]+(1-self.lambda_g)*self.xH[self.glIndices]
+    self.xg = self.lambda_g*self.xH[self.glIndices+1]+(1-self.lambda_g)*self.xH[self.glIndices]
 
 
   def iterateOnViscosity(self):
