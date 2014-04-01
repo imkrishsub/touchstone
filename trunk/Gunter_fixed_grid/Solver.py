@@ -333,30 +333,38 @@ class Solver:
     sPrev[mask] = self.delta*self.HPrev[mask]
     plt.plot(self.xH,s, 'r', self.xH, -self.b, 'k', 
              self.xH, self.Hf-self.b, 'g',self.xH, sPrev,'b')
+    plt.legend(('s$^{t+1}$','b','H_f-b','s$^t$'))
              
     ax = plt.subplot(2,3,2)
     ax.cla()
     plt.plot(self.xu[1:-1], self.resTau_kp1[1:-1],'b', 
              self.xu[1:-1], self.resTau_k[1:-1], 'r')
+    plt.legend(('resTau$^{k+1}$','resTau$^k$'))
+
     ax = plt.subplot(2,3,3)
     ax.cla()
     plt.plot(self.xu, self.longi, 'b', self.xu, self.basal, 'r', 
              self.xu, self.driving, 'g', self.xu, self.resTau_k, 'k')
+    plt.legend(('longi','basal','driving','resTau$^k$'))
+
     ax = plt.subplot(2,3,4)
     ax.cla()
-    plt.plot(self.xu,self.u, 'b', self.xu, self.uPrev, 'r')
+    plt.plot(self.xu,self.u, 'r', self.xu, self.uPrev, 'b')
     plt.ylim(numpy.amin(self.u),numpy.amax(self.u))
+    plt.legend(('u$^{t+1}$','u$^t$'))
 
     ax = plt.subplot(2,3,5)
     ax.cla()
     plt.plot(self.xH,dH_dt, 'b')
     plt.plot(self.xu,du_dt, 'r')
+    plt.legend(('dH/dt','du/dt'))
     
     ax = plt.subplot(2,3,6)
     ax.cla()
     plt.plot(self.xH, dH_dt, 'b', 
              self.xH, self.Dxu.dot(self.H*self.u), 'k', 
              self.xH, self.a*numpy.ones(self.xH.shape), 'r')
+    plt.legend(('dH/dt','(uH)$_x$','a'))
    
 
     cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
