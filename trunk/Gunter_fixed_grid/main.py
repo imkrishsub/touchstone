@@ -49,7 +49,7 @@ parser.add_option("--xgInit", type="float", default=1.0, dest="xgInit")
 
 parser.add_option("--plot", action="store_true", dest="plot")
 parser.add_option("--plotContinuous", action="store_true", dest="plotContinuous")
-parser.add_option("--useLongi", action="store_true", dest="useLongi")
+parser.add_option("--disableLongi", action="store_true", dest="disableLongi")
 parser.add_option("--useChannel", action="store_true", dest="useChannel")
 parser.add_option("--useSchoofBasal", action="store_true", dest="useSchoofBasal")
 
