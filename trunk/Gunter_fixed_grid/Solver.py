@@ -645,7 +645,7 @@ class Solver:
         
       if not self.innerConverged:
         print "Error: inner loop did not converge after %i steps!"%self.maxPicardIter
-        print "Try reducing the goal CFL number."
+        print "Try reducing the time step."
 #    print "diffU=,",diffU
         exit(1)
   
