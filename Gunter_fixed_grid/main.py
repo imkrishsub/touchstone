@@ -24,7 +24,7 @@ parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
 parser.add_option("--m_0", type="float", default=2.0, dest="m_0")
 parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab") #Pa^-3 s^-1
 parser.add_option("--poly", action="store_true", dest="poly")
-parser.add_option("--useGLP", action="store_false", dest="useGLP")
+parser.add_option("--useGLP", action="store_true", default=False, dest="useGLP")
 
 parser.add_option("--inFile", type="string", default="none", dest="inFile")
 parser.add_option("--folder", type="string", default="results", dest="folder")
@@ -48,10 +48,10 @@ parser.add_option("--dt", type="float", default=3e-4, dest="dt")
 parser.add_option("--xgInit", type="float", default=1.0, dest="xgInit")
 
 parser.add_option("--plot", action="store_true", dest="plot")
-parser.add_option("--plotContinuous", action="store_true", dest="plotContinuous")
-parser.add_option("--disableLongi", action="store_true", dest="disableLongi")
-parser.add_option("--useChannel", action="store_true", dest="useChannel")
-parser.add_option("--useSchoofBasal", action="store_true", dest="useSchoofBasal")
+parser.add_option("--plotContinuous", action="store_true", default=False, dest="plotContinuous")
+parser.add_option("--disableLongi", action="store_true", default=False, dest="disableLongi")
+parser.add_option("--useChannel", action="store_true",  default=False, dest="useChannel")
+parser.add_option("--useSchoofBasal", action="store_true",  default=False, dest="useSchoofBasal")
 
 options, args = parser.parse_args()
 
