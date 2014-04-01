@@ -14,7 +14,8 @@ class Solver:
       self.computeB = self.computeBLinear
     self.Nx = options.Nx
     self.deltaX = options.deltaX
-    self.dt = options.dt
+    self.dt = options.dtInit
+    self.goalCFL = options.goalCFL
     self.xc = options.xc
     self.xu = numpy.linspace(0,self.xc,self.Nx)
     self.xH = self.xu-0.5*self.deltaX
@@ -371,7 +372,7 @@ class Solver:
     plt.subplot(2,3,1)
     plt.title('outer: %i inner: %i time: %g'%(outer, inner,self.time))
     plt.subplot(2,3,2)
-    plt.title('CFL=%.2f'%cfl)
+    plt.title('CFL=%.2f dt=%.3g'%(cfl,self.dt))
     plt.subplot(2,3,3)
     plt.title('resStress: %.4g tol.: %.4g'%(self.resStress, self.toleranceInner))
     plt.subplot(2,3,4)
@@ -645,13 +646,17 @@ class Solver:
         
       if not self.innerConverged:
         print "Error: inner loop did not converge after %i steps!"%self.maxPicardIter
-        print "Try reducing the time step."
+        print "Try reducing the goal CFL number."
 #    print "diffU=,",diffU
         exit(1)
   
 
       self.time += self.dt
-      print "outer:", outer, "time:", self.time
+      
+      scale = max(0.5,min(2.0,self.goalCFL/cfl))
+      self.dt *= scale
+      
+      print "outer:", outer, "time:", self.time, "dt:", self.dt
       if(dH_dt < self.tol_out_dH_dt and dxg_dt < self.tol_out_dxg_dt):
         converged = True
         break

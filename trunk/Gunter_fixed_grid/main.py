@@ -44,8 +44,9 @@ parser.add_option("--toleranceH", type="float", default=0.1, dest="toleranceH") 
 parser.add_option("--toleranceXg", type="float", default=1e-3, dest="toleranceXg")  # m/yr
 parser.add_option("--toleranceInner", type="float", default=1e-3, dest="toleranceInner")
 parser.add_option("--initUTolerance", type="float", default=1e-3, dest="initUTolerance")
-parser.add_option("--dt", type="float", default=3e-4, dest="dt")
+parser.add_option("--dtInit", type="float", default=3e-4, dest="dtInit")
 parser.add_option("--xgInit", type="float", default=1.0, dest="xgInit")
+parser.add_option("--goalCFL", type="float", default=2.0, dest="goalCFL")
 
 parser.add_option("--plot", action="store_true", dest="plot")
 parser.add_option("--plotContinuous", action="store_true", default=False, dest="plotContinuous")

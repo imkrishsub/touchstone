@@ -15,7 +15,7 @@ print 'caseFile=', caseFile
 caseList = [line.rstrip('\n') for line in open(caseFile)]
 
 ACount = 17
-for caseIndex in range(2*ACount*mismipIndex,2*ACount*(mismipIndex+1)):
+for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
   lineIndex=4*caseIndex
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]

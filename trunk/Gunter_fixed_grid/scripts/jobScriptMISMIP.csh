@@ -20,7 +20,7 @@ echo caseFile: $caseFile
 set caseLines = `wc -l < $caseFile`
 echo caseLines: $caseLines
 set ACount = 17
-@ linesPerExpt = ( 8 * $ACount )
+@ linesPerExpt = ( 4 * $ACount )
 @ caseCount = ( $caseLines / $linesPerExpt )
 
 echo caseCount: $caseCount
