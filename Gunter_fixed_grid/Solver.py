@@ -337,9 +337,9 @@ class Solver:
              
     ax = plt.subplot(2,3,2)
     ax.cla()
-    plt.plot(self.xu[1:-1], self.resTau_kp1[1:-1],'b', 
+    plt.plot(self.xu[1:-1], self.resTau_solver[1:-1],'b', 
              self.xu[1:-1], self.resTau_k[1:-1], 'r')
-    plt.legend(('resTau$^{k+1}$','resTau$^k$'))
+    plt.legend(('resTau$_{solver}$','resTau$^k$'))
 
     ax = plt.subplot(2,3,3)
     ax.cla()
@@ -369,7 +369,7 @@ class Solver:
 
     cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
     plt.subplot(2,3,1)
-    plt.title('outer: %i inner: %i'%(outer, inner))
+    plt.title('outer: %i inner: %i time: %g'%(outer, inner,self.time))
     plt.subplot(2,3,2)
     plt.title('CFL=%.2f'%cfl)
     plt.subplot(2,3,3)
@@ -533,8 +533,8 @@ class Solver:
    
     ukp1 = scipy.sparse.linalg.spsolve(M,rhs)
     
-    self.resTau_kp1 = (M.dot(ukp1) - rhs)/norm
-    self.noiseFloor = numpy.amax(numpy.abs(self.resTau_kp1))
+    self.resTau_solver = (M.dot(ukp1) - rhs)/norm
+    self.noiseFloor = numpy.amax(numpy.abs(self.resTau_solver))
     #print 'tau solver res (noise floor):', self.noiseFloor
 
     self.u = ukp1
@@ -606,8 +606,8 @@ class Solver:
       #print "resStress", self.resStress
       #test residuals for convergence...
       if(self.resStress < self.toleranceInner):
-        print 'Picard converged in %i iterations.'%iterIndex
-        print 'resStress, tol:', self.resStress, self.toleranceInner
+        print 'Picard converged in %i iterations.'%(iterIndex+1)
+        print 'resStress =', self.resStress, 'tol =',self.toleranceInner
         self.innerConverged = True
         return
 
@@ -635,6 +635,7 @@ class Solver:
   
       cfl = numpy.amax(numpy.abs(self.u/self.deltaX))*self.dt
       print "dH_dt = ",dH_dt, "dxg_dt = ",dxg_dt, "CFL = ",cfl
+      print "xg = ", self.xg, "lambda_g = ", self.lambda_g
   
       if numpy.isnan(cfl):
         print "blew up!"
@@ -650,6 +651,7 @@ class Solver:
   
 
       self.time += self.dt
+      print "outer:", outer, "time:", self.time
       if(dH_dt < self.tol_out_dH_dt and dxg_dt < self.tol_out_dxg_dt):
         converged = True
         break
