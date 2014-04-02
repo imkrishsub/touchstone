@@ -11,6 +11,8 @@ module load python
 
 cd $PBS_O_WORKDIR
 
+id=$(qsub -W depend=afterany:$PBS_JOBID@$queue jobScriptMISMIP.bash)
+
 set caseFile = allMISMIPCases.txt
 set logDir = logs$PBS_JOBID
 echo logDir:$logDir
