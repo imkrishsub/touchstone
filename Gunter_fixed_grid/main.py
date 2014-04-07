@@ -21,7 +21,7 @@ parser.add_option("--g", type="float", default=9.8, dest="g")
 parser.add_option("--n", type="float", default=3.0, dest="n")
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
 parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
-parser.add_option("--m_0", type="float", default=2.0, dest="m_0")
+parser.add_option("--m_0", type="float", default=0.5, dest="m_0")
 parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab") #Pa^-3 s^-1
 parser.add_option("--poly", action="store_true", dest="poly")
 parser.add_option("--useGLP", action="store_true", default=False, dest="useGLP")
@@ -45,7 +45,7 @@ parser.add_option("--toleranceXg", type="float", default=1e-3, dest="toleranceXg
 parser.add_option("--toleranceInner", type="float", default=1e-3, dest="toleranceInner")
 parser.add_option("--initUTolerance", type="float", default=1e-3, dest="initUTolerance")
 parser.add_option("--dtInit", type="float", default=3e-4, dest="dtInit")
-parser.add_option("--xgInit", type="float", default=1.0, dest="xgInit")
+parser.add_option("--xgInit", type="float", default=1.4, dest="xgInit")
 parser.add_option("--goalCFL", type="float", default=2.0, dest="goalCFL")
 
 parser.add_option("--plot", action="store_true", dest="plot")
