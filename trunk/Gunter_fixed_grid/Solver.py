@@ -417,8 +417,8 @@ class Solver:
     self.floatingMaskU[0:-1] = numpy.logical_and(self.floatingMaskH[1:],self.floatingMaskH[0:-1])
     
     self.glIndices = numpy.nonzero(numpy.logical_xor(self.groundedMaskH[1:],self.groundedMaskH[0:-1]))[0]
-    if(len(self.glIndices) == 1):
-      self.glIndices = self.glIndices[0]
+    #if(len(self.glIndices) == 1):
+    self.glIndices = self.glIndices[0]
     #print 'gl at index (or indices):', glIndices
         
     self.lambda_g = (1. - fPattyn[self.glIndices])/(fPattyn[self.glIndices+1] - fPattyn[self.glIndices])
@@ -436,8 +436,7 @@ class Solver:
     
     uxk = self.Dxu.dot(uk)
     abs_ux = self.absS(uxk)
-    nuk = self.epsilon*(abs_ux)**(1./n-1.)
-    
+    nuk = self.epsilon*(abs_ux)**(1./n-1.) 
   
     # setting up tau_b  
      
