@@ -1,7 +1,7 @@
 #PBS -S /bin/csh
 #PBS -q regular
 #PBS -l mppwidth=48
-#PBS -l walltime=4:00:00
+#PBS -l walltime=2:00:00
 #PBS -N FixedGridMISMIP
 #PBS -A m1041
 #PBS -m ae
