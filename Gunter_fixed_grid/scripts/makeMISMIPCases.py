@@ -27,7 +27,7 @@ tols = defaultTol*numpy.ones((len(dxs),len(ps),len(glpStrings)))
 # for most cases, we hold the time step roughtly constant
 # with resolution (so CFL is proportional to resolution) 
 # and decrease it by a factor of 2 with increasing p
-p0GoalCFLs = numpy.array([ 0.5, 1., 2., 4., 8., 16., 32.])
+p0GoalCFLs = numpy.array([ 0.5, 1., 4., 8., 16., 32., 64.])
 p1GoalCFLs = 0.5*p0GoalCFLs
 goalCFLs = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
 for resIndex in range(len(dxs)):
