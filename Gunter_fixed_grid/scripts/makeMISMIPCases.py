@@ -6,7 +6,10 @@ slope_ref = "778.5"
 C_ref = "7.624e6"
 lambda_ref = "2.0"
 xc = "1.760"
-
+xgInit = "0.8"
+eps_s = "1e-10"
+m_0 = "0.5"
+Ab = "3.1688e-24"
 
 dxs = [ "3.2", "1.6", "0.8", "0.4", "0.2", "0.1", "0.05" ]
 Nxs = [ "551", "1101", "2201", "4401", "8801", "17601", "35201" ]
@@ -24,7 +27,7 @@ tols = defaultTol*numpy.ones((len(dxs),len(ps),len(glpStrings)))
 # for most cases, we hold the time step roughtly constant
 # with resolution (so CFL is proportional to resolution) 
 # and decrease it by a factor of 2 with increasing p
-p0GoalCFLs = numpy.array([ 0.5, 1., 4., 8., 16., 32., 64.])
+p0GoalCFLs = numpy.array([ 0.5, 1., 2., 4., 8., 16., 32.])
 p1GoalCFLs = 0.5*p0GoalCFLs
 goalCFLs = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
 for resIndex in range(len(dxs)):
@@ -47,7 +50,7 @@ tols[1,1,1] = 5e-2 # 1.6 km, p=0.25, GLP
 tols[0,2,1] = 5e-2 # 3.2 km, p=0.5, GLP
 tols[1,2,1] = 5e-2 # 1.6 km, p=0.5, GLP
 
-commonArgs = "--folder=. --linearSlope=%s --C=%s --lambda_0=%s --eps_s=1e-8"%(slope_ref,C_ref,lambda_ref)
+commonArgs = "--folder=. --linearSlope=%s --C=%s --lambda_0=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(slope_ref,C_ref,lambda_ref,eps_s,xgInit,m_0,Ab)
 # uncomment the following to include plotting
 #commonArgs="%s --plot --plotContinuous"%(commonArgs) 
 
