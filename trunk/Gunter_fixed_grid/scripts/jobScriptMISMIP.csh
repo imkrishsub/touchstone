@@ -1,6 +1,6 @@
 #PBS -S /bin/csh
 #PBS -q regular
-#PBS -l mppwidth=48
+#PBS -l mppwidth=72
 #PBS -l walltime=2:00:00
 #PBS -N FixedGridMISMIP
 #PBS -A m1041
@@ -44,5 +44,5 @@ echo caseCount: $caseCount
 set script = "python code/scripts/runMISMIP.py"
 echo script: $script
 
-tf -t $caseCount -n 2 -o $logDir/touchstoneCase%t.out \
+tf -t $caseCount -n 3 -o $logDir/touchstoneCase%t.out \
   -e $logDir/touchstoneCase%t.err $script $caseFile \$TF_TASKID

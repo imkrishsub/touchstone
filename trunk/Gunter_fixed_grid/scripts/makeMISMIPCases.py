@@ -43,6 +43,9 @@ for resIndex in range(len(dxs)):
 #goalCFLs[1,1] = 0.0001
 tols[0,1,1] = 5e-2 # 3.2 km, p=0.25, GLP
 tols[1,1,1] = 5e-2 # 1.6 km, p=0.25, GLP
+tols[2,1,0] = 5e-2 # 0.8 km, p=0.25, nonGLP
+tols[2,1,1] = 5e-2 # 0.8 km, p=0.25, GLP
+tols[3,1,1] = 5e-2 # 0.4 km, p=0.25, GLP
 
 # p=0.5 at 3.2 and 1.6 km resolution
 #goalCFLs[0,2] = 0.01
