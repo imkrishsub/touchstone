@@ -22,7 +22,7 @@ for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
   if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
     print "case %s/%s already finished."%(dir,prefix)
     continue
-  args = ["python", "code/scripts/runOneCase.py", caseFile, "%i"%(caseIndex)]  
+  args = ["python", "code/scripts/runOneCase.py", caseFile, "%i"%(caseIndex), "%i"%(lineIndex)]  
   
   print "running case %s/%s."%(dir,prefix)
   status = subprocess.call(args)

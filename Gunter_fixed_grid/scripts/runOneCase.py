@@ -10,13 +10,13 @@ options, args = parser.parse_args()
 
 caseFile = args[0]
 caseIndex = int(args[1])
+lineIndex = int(args[2])
 #inputFile = options.inFile
 
 print 'caseFile=', caseFile 
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
 
-lineIndex=4*caseIndex
 dir=caseList[lineIndex]
 prefix=caseList[lineIndex+1]
 inputFile=caseList[lineIndex+2]

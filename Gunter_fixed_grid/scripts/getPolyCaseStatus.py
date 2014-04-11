@@ -4,24 +4,16 @@ import os
 caseFile = "allPolyMISMIPCases.txt"
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
+exptCount = int(caseList[0])
+lineIndex = 1
 
-ACount_p = [37, 37, 37, 67, 67]
-starts = []
-ends = []
-start = 0
-for resIndex in range(7):
-  for pIndex in range(5):
-    for glpIndex in range(2):
-      starts += [start]
-      start += ACount_p[pIndex]
-      ends += [start]
-
-for mismipIndex in range(70):
-  for caseIndex in range(starts[mismipIndex],ends[mismipIndex]):
-    AIndex = caseIndex-starts[mismipIndex]
-    lineIndex=4*caseIndex
+for mismipIndex in range(exptCount):
+  ACount = int(caseList[lineIndex])
+  lineIndex += 1
+  for AIndex in range(ACount):
     dir = caseList[lineIndex]
     prefix = caseList[lineIndex+1]
+    lineIndex += 4
     if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
       print "%i %i: %s/%s final."%(mismipIndex, AIndex, dir,prefix)
       continue

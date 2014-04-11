@@ -14,30 +14,35 @@ mismipIndex = int(args[1])
 print 'caseFile=', caseFile 
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
+exptCount = int(caseList[0])
+exptIndex = 0
+lineIndex = 1
+startCase = 0
+ACount = int(caseList[lineIndex])
+while(exptIndex < mismipIndex):
+  lineIndex += 4*ACount+1
+  startCase += ACount
+  exptIndex += 1
+  ACount = int(caseList[lineIndex])
 
-ACount_p = [37, 37, 37, 67, 67]
-starts = []
-ends = []
-start = 0
-for resIndex in range(7):
-  for pIndex in range(5):
-    for glpIndex in range(2):
-      starts += [start]
-      start += ACount_p[pIndex]
-      ends += [start]
+endCase = startCase+ACount
 
-for caseIndex in range(starts[mismipIndex], ends[mismipIndex]):
-  lineIndex=4*caseIndex
+print exptCount, exptIndex, startCase, endCase, lineIndex
+
+lineIndex += 1 # skip the A count
+for caseIndex in range(startCase,endCase):
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
   if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
     print "case %s/%s already finished."%(dir,prefix)
+    lineIndex += 4
     continue
-  args = ["python", "code/scripts/runOneCase.py", caseFile, "%i"%(caseIndex)]  
+  args = ["python", "code/scripts/runOneCase.py", caseFile, "%i"%(caseIndex), "%i"%(lineIndex)]  
   
   print "running case %s/%s."%(dir,prefix)
   status = subprocess.call(args)
   if status != 0:
     print "runOneCase.py failed! Exiting."
     exit(status)  
+  lineIndex += 4
   
