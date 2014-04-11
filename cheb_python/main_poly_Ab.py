@@ -97,29 +97,65 @@ Nx = 1025
 #eps_s = 1e-3
 
 if(options.dense):
-  oldAs = [30,
-    25,
-    20,
-    15,
-    10,
-    8.5,
-    6.5,
-    5,
-    2.5,
-    2,
-    1.5,
-    1,
-    0.5,
-    0.25]
-  oldAs = numpy.array(oldAs)*1e-26 #Pa^(-3) s^(-1)
+#  oldAs = [30,
+#    25,
+#    20,
+#    15,
+#    10,
+#    8.5,
+#    6.5,
+#    5,
+#    2.5,
+#    2,
+#    1.5,
+#    1,
+#    0.5,
+#    0.25]
+#  oldAs = numpy.array(oldAs)*1e-26 #Pa^(-3) s^(-1)
+#  
+#  density = 8
+#  As = numpy.zeros((density*len(oldAs)-(density-1)),float)
+#  As[0::density] = oldAs
+#  for offset in range(1,density):
+#    frac = offset/float(density)
+#    As[offset::density] = (1.0 - frac)*oldAs[0:-1]+frac*oldAs[1:] 
+#  #As = 10.0**numpy.linspace(-24.5,-26.6,41)
+  As = [30,
+        28.231,
+        26.566,
+        25,
+        23.210,
+        21.544,
+        20,
+        18.171,
+        16.510,
+        15,
+        13.103,
+        11.447,
+        10,
+        7.9370,
+        6.2996,
+        5,
+        3.9685,
+        3.1498,
+        2.5,
+        2.3208,
+        2.1544,
+        2,
+        1.8171,
+        1.6510,
+        1.5,
+        1.3104,
+        1.1447,
+        1,
+        0.79279,
+        0.62996,
+        0.5,
+        0.39685,
+        0.31498,
+        0.25]
+  As = numpy.array(As)*1e-26 #Pa^(-3) s^(-1)
   
-  density = 8
-  As = numpy.zeros((density*len(oldAs)-(density-1)),float)
-  As[0::density] = oldAs
-  for offset in range(1,density):
-    frac = offset/float(density)
-    As[offset::density] = (1.0 - frac)*oldAs[0:-1]+frac*oldAs[1:] 
-  #As = 10.0**numpy.linspace(-24.5,-26.6,41)
 else:
   As = [30,
     25,
