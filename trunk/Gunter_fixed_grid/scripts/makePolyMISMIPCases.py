@@ -5,7 +5,10 @@ fileName = "allPolyMISMIPCases.txt"
 C_ref = "7.624e6"
 lambda_ref = "2.0"
 xc = "1.504"
-
+xgInit = "0.6"
+eps_s = "1e-10"
+m_0 = "0.5"
+Ab = "3.1688e-24"
 
 dxs = [ "3.2", "1.6", "0.8", "0.4", "0.2", "0.1", "0.05" ]
 Nxs = [ "471", "941", "1881", "3761", "7521", "15041", "30081" ]
@@ -72,11 +75,14 @@ tols[1,1,1] = 5e-2 # 1.6 km, p=0.25, GLP
 tols[0,2,1] = 5e-2 # 3.2 km, p=0.5, GLP
 tols[1,2,1] = 5e-2 # 1.6 km, p=0.5, GLP
 
-commonArgs = "--poly --folder=. --C=%s --lambda_0=%s --eps_s=1e-8"%(C_ref,lambda_ref)
+commonArgs = "--poly --folder=. --C=%s --lambda_0=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(C_ref,lambda_ref,eps_s,xgInit,m_0,Ab)
 # uncomment the following to include plotting
 #commonArgs="%s --plot --plotContinuous"%(commonArgs) 
 
+caseCount = len(dxs)*len(ps)*len(glpStrings)
 filePointer = open(fileName, 'w')
+filePointer.write("%i\n"%caseCount)
+
 exptIndex = 0
 for resIndex in range(len(dxs)):
   for pIndex in range(len(ps)):
@@ -92,6 +98,7 @@ for resIndex in range(len(dxs)):
       tol = "%.1e"%tols[resIndex,pIndex,glpIndex]
       prevResult = "none"
       print "MISMIP expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+      filePointer.write("%i\n"%(2*len(As[pIndex])-1))
       exptIndex += 1
       for A in As[pIndex]:
         dir = "%s/p_%.2f/res_%s"%(glpDir,p,dx)
