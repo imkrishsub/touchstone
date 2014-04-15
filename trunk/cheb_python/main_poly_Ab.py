@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import numpy
 #import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os.path
 from SteadyStateSolution import SteadyStateSolution
 from optparse import OptionParser
@@ -155,7 +155,6 @@ if(options.dense):
         0.31498,
         0.25]
   As = numpy.array(As)*1e-26 #Pa^(-3) s^(-1)
-  
 else:
   As = [30,
     25,
@@ -214,7 +213,7 @@ solution = SteadyStateSolution(Nx)
 #plt.show()
 #crash
 
-#solution.plotContinuous = False
+solution.plotContinuous = False
 solution.plot = False
 solution.useLongi = not options.noLongi
 

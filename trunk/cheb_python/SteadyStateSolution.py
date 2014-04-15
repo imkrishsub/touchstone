@@ -19,8 +19,6 @@ def findSteadyState_A_xg(A,xg, solution):
   print "BrentQ iteration: ", solution.brentQIter+1
   
   x = solution.cheb.x*xg
-  if(solution.plotContinuous):
-    plt.ion()
 
   (solution.H, solution.Hx) = solution.computeHGuess(x,solution)
 
@@ -88,7 +86,7 @@ class SteadyStateSolution:
     self.C = numpy.array(7.624e6)
     self.a = numpy.array(1.0)
     self.plotContinuous = True
-    self.plot = True
+    self.plot = False
     self.useLongi = True
     self.useSchoofBasal = False
     #self.Ab = 4.227e-25
@@ -139,8 +137,19 @@ class SteadyStateSolution:
         return False
 
     if(numpy.abs(self.resBC) > self.tolerance):
-      print "Brenq failed: resBC is larger than the tolerance."
-      return False
+      print "Brentq failed: resBC is larger than the tolerance."
+      print "Trying again without initializing from previous Hx"
+      self.brentQIter = 0
+      self.initWithPrev = False
+      try:
+        xg = numpy.array(scipy.optimize.brentq(findSteadyState_xg, xgMin, xgMax, xtol=tolerance, args=(self,)))
+      except ValueError as e:
+        print "Brentq failed:", e
+        return False
+
+      if(numpy.abs(self.resBC) > self.tolerance):
+        print "Brenq failed: resBC is larger than the tolerance."
+        return False
       
     if(self.xg != xg):
       self.xg = xg
@@ -208,7 +217,6 @@ class SteadyStateSolution:
       print "iteration", iteration, minValue, maxValue, minValueOuter, maxValueOuter
       try:
         self.brentQIter = 0
-        self.plot = True
         fa = fun(minValue, self)
         print "fa:", fa
         self.Hprev2 = self.H
@@ -223,7 +231,6 @@ class SteadyStateSolution:
   
       try:
         self.brentQIter = 0
-        self.plot = True
         fb = fun(maxValue, self)
         print "fb:", fb
         self.Hprev1 = self.H
@@ -439,7 +446,7 @@ class SteadyStateSolution:
     uxkp1 = (a - ukp1*Hxkp1)/Hkp1
 
     if(numpy.any(uxkp1 < minScale*uxk)):
-      print "Have to scale uxkp1 so ux doesn't got through zero." 
+      print "Have to scale uxkp1 so ux doesn't got through zero."
       scale = numpy.amin(uxkp1/uxk)
       print scale
       alpha = (1.0-minScale)/(1.0-numpy.amin(scale))
@@ -470,8 +477,10 @@ class SteadyStateSolution:
     diff = bk-(1-self.delta)*Hkp1
     botkp1 = -bk + self.maxS(diff)
     skp1 = botkp1 + Hkp1
-
+    
     if(self.plot):
+      if(self.plotContinuous):
+        plt.ion()
       temp = nuk[-1]*uxk[-1]/(0.5*self.delta) - bk[-1]
       fig = plt.figure(1)
       if(len(fig.axes) > 0):
@@ -507,6 +516,7 @@ class SteadyStateSolution:
       plt.plot(xk,uxkp1/uxk,'b')
       if(self.plotContinuous):
         plt.draw()
+        plt.pause(0.0001)
       else:
         plt.show()
       
