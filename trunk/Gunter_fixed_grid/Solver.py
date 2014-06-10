@@ -220,18 +220,22 @@ class Solver:
     
   def readResults(self, fileName):
     print "reading from: ", fileName
-    filePointer = open(fileName,'rb')
-    Nx = numpy.fromfile(filePointer, dtype=int, count=1)[0]
-    if(Nx != self.Nx):
-      print "Bad Nx in file."
-      exit(1)
+    try:
+      filePointer = open(fileName,'rb')
+      Nx = numpy.fromfile(filePointer, dtype=int, count=1)[0]
+      if(Nx != self.Nx):
+        print "Bad Nx in file."
+        exit(1)
   
-    self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
-    self.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
-    self.H = numpy.fromfile(filePointer, dtype=float, count=Nx)
-    self.updateXgAndFlotationMasks()
-    self.u = numpy.fromfile(filePointer, dtype=float, count=Nx)
-    filePointer.close()
+      self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
+      self.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
+      self.H = numpy.fromfile(filePointer, dtype=float, count=Nx)
+      self.updateXgAndFlotationMasks()
+      self.u = numpy.fromfile(filePointer, dtype=float, count=Nx)
+      filePointer.close()
+    except IOError:
+      print 'Could not read %s. Exiting.'%fileName
+      exit(40)
 
   def writeResults(self):
     fileName = "%s/%s"%(self.folder,self.outFile)

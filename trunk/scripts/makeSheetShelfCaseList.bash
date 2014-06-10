@@ -70,26 +70,8 @@ done
 
 for p in 0.00 0.25 0.50 0.75 1.00
 do
-  CFL=3
-  for W in 0.5 1 2 3 4
-  do
-    prefix=W_$W
-    commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg --useChannelWidth --W0=$W --Wx=0.0"
-    echo p_$p/vary_W >> $fileName
-    echo $prefix >> $fileName
-    echo $commonArgs >> $fileName
-  done
-  CFL=30
-  for W in 5
-  do
-    prefix=W_$W
-    commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg --useChannelWidth --W0=$W --Wx=0.0"
-    echo p_$p/vary_W >> $fileName
-    echo $prefix >> $fileName
-    echo $commonArgs >> $fileName
-  done
-  CFL=100
-  for W in 10 15 20
+  CFL=200
+  for W in 0.5 1 2 3 4 5 10 15 20
   do
     prefix=W_$W
     commonArgs="--folder=. --p=$p --A=$A_ref --linearSlope=$slope_ref --C=$C_ref --lambda_0=$lambda_ref --goalCFL=$CFL --initDt=$dt --maxXg=$maxXg --minXg=$minXg --useChannelWidth --W0=$W --Wx=0.0"
