@@ -41,8 +41,9 @@ commonArgs = ["python", "../../../code/main.py"] \
 restartFile="none"
 if os.path.exists(filePointer):
   lines = [line.rstrip('\n') for line in open(filePointer)]
-  restartFile = lines[0]
-else:
+  if len(lines) > 0 and os.path.exists(lines[0]) and (os.stat(lines[0]).st_size > 0):
+    restartFile=lines[0]
+if(restartFile == "none"):
   if os.path.exists(inputFile):
     restartFile=inputFile
   elif (inputFile != "none"):
@@ -64,6 +65,16 @@ args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--inFile=%s"%restartFi
 status = subprocess.call(args, stdout=logFile, stderr=errFile)
 logFile.close()
 errFile.close()
+if status == 40:
+  print "failed to read input file. Trying again with %s."%inputFile
+
+  logFile = open("%s.log"%inProgressFile,'w')
+  errFile = open("%s.err"%inProgressFile,'w')
+  args = commonArgs + ["--outFile=%s.pyda"%inProgressFile, "--inFile=%s"%inputFile]
+  status = subprocess.call(args, stdout=logFile, stderr=errFile)
+  logFile.close()
+  errFile.close()
+
 if status != 0:
   print "run failed! Exiting."
   exit(status)
