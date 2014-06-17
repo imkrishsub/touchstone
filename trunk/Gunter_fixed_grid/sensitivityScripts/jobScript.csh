@@ -1,7 +1,7 @@
 #PBS -S /bin/csh
-#PBS -q regular
-#PBS -l mppwidth=24
-#PBS -l walltime=3:20:00
+#PBS -q debug
+#PBS -l mppwidth=288
+#PBS -l walltime=30:00
 #PBS -N FixedGridSensitivity
 #PBS -A m1041
 #PBS -m ae
@@ -24,7 +24,7 @@ echo $finishedCount finished experiments will be copied to the results folder.
 ./copyResults.bash
 @ remainingCount = (280 - $finishedCount )
 echo $remainingCount unfinished experiments are still in progress.
-set failedCount = `./getCaseStatus.bash | grep failed | wc -l`
+set failedCount = `./code/sensitivityScripts/getCaseStatus.bash | grep failed | wc -l`
 echo $failedCount unfinished experiments have failed and need attention.
 
 set caseFile = allSensitivityCases.txt
@@ -40,6 +40,6 @@ echo exptCount: $exptCount
 set script = "python code/scripts/runSensitivityExpt.py"
 echo script: $script
 
-tf -t $exptCount -n 1 -o $logDir/touchstoneCase%t.out \
+tf -t $exptCount -n 12 -o $logDir/touchstoneCase%t.out \
   -e $logDir/touchstoneCase%t.err $script $caseFile \$TF_TASKID
 

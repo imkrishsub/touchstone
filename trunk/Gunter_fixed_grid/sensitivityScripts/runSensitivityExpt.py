@@ -21,7 +21,7 @@ for caseIndex in range(caseCount):
   lineIndex=4*caseIndex
   prevResult=caseList[lineIndex+2]
   if(prevResult == "none"):
-    exptLines.append(lineIndex)
+    exptFirstCase.append(lineIndex)
 
 exptFirstCase.append(caseCount)
 

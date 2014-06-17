@@ -142,7 +142,7 @@ for resIndex in range(len(dxs)):
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)      
-         filePointer.write("%s\n"%args)
+        filePointer.write("%s\n"%args)
         prevResult="%s_final.pyda"%prefix
 
       for slope in slopes[-2::-1]:
@@ -167,7 +167,7 @@ for resIndex in range(len(dxs)):
         prefix = "lambda_0_%s_adv"%Lambda
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
           %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)     
-         filePointer.write("%s\n"%dir)
+        filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
         filePointer.write("%s\n"%args)

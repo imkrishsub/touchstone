@@ -28,13 +28,16 @@ if (inputFile != "none"):
 
 if(not os.path.exists(dir)):
   os.makedirs(dir)
+
+oldPath = os.getcwd()
+
 os.chdir(dir)
 
 inProgressFile="%s_inProgress"%prefix
 finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
-commonArgs = ["python", "../../../code/main.py"] \
+commonArgs = ["python", "%s/code/main.py"%oldPath] \
   + commonArgs \
   + ["--folder=.", "--filePointer=%s"%filePointer]
 
