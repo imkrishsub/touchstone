@@ -8,14 +8,24 @@ parser = OptionParser()
 options, args = parser.parse_args()
 
 caseFile = args[0]
-mismipIndex = int(args[1])
+exptIndex = int(args[1])
 
 print 'caseFile=', caseFile 
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
 
-ACount = 17
-for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
+caseCount = len(caseList)/4
+
+exptFirstCase = []
+for caseIndex in range(caseCount):
+  lineIndex=4*caseIndex
+  prevResult=caseList[lineIndex+2]
+  if(prevResult == "none"):
+    exptLines.append(lineIndex)
+
+exptFirstCase.append(caseCount)
+
+for caseIndex in range(exptFirstCase[exptIndex],exptFirstCase[exptIndex+1]):
   lineIndex=4*caseIndex
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
@@ -30,3 +40,4 @@ for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
     print "runOneCase.py failed! Exiting."
     exit(status)  
   
+
