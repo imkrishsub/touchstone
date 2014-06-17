@@ -1,5 +1,5 @@
 #PBS -S /bin/csh
-#PBS -q debug
+#PBS -q regular
 #PBS -l mppwidth=288
 #PBS -l walltime=30:00
 #PBS -N FixedGridSensitivity
@@ -13,18 +13,22 @@ cd $PBS_O_WORKDIR
 set queue=edique02
 echo $PBS_JOBID@$queue
 
-set id=`qsub -W depend=afterany:$PBS_JOBID@$queue jobScript.csh`
-echo submitted the next job: $id
+#set id=`qsub -W depend=afterany:$PBS_JOBID@$queue jobScript.csh`
+#echo submitted the next job: $id
 
 mkdir -p logs
 mv FixedGrid* logs
 
-set finishedCount = `./code/sensitivityScripts/getCaseStatus.bash | wc -l`
-echo $finishedCount finished experiments will be copied to the results folder.
-./copyResults.bash
-@ remainingCount = (280 - $finishedCount )
+
+set finishedCount = `aprun -n 1 python code/sensitivityScripts/getCaseStatus.py | wc -l`
+# subtract extra line because of aprun output
+@ finishedCount = ( $finishedCount - 1 )
+echo $finishedCount finished experiments.
+@ remainingCount = ( 280 - $finishedCount )
 echo $remainingCount unfinished experiments are still in progress.
-set failedCount = `./code/sensitivityScripts/getCaseStatus.bash | grep failed | wc -l`
+set failedCount = `aprun -n 1 python code/sensitivityScripts/getCaseStatus.py | grep failed | wc -l`
+# subtract extra line because of aprun output
+@ failedCount = ( $failedCount - 1 )
 echo $failedCount unfinished experiments have failed and need attention.
 
 set caseFile = allSensitivityCases.txt
@@ -33,11 +37,11 @@ echo logDir:$logDir
 mkdir -p $logDir
 echo caseFile: $caseFile
 
-exptCount=280
+set exptCount = 280
 
 echo exptCount: $exptCount
 
-set script = "python code/scripts/runSensitivityExpt.py"
+set script = "python code/sensitivityScripts/runSensitivityExpt.py"
 echo script: $script
 
 tf -t $exptCount -n 12 -o $logDir/touchstoneCase%t.out \
