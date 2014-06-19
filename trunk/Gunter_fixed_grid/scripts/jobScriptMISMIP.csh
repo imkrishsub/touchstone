@@ -35,8 +35,8 @@ echo caseFile: $caseFile
 
 set caseLines = `wc -l < $caseFile`
 echo caseLines: $caseLines
-set ACount = 17
-@ linesPerExpt = ( 4 * $ACount )
+set CCount = 14
+@ linesPerExpt = ( 4 * $CCount )
 @ caseCount = ( $caseLines / $linesPerExpt )
 
 echo caseCount: $caseCount

@@ -14,8 +14,8 @@ print 'caseFile=', caseFile
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
 
-ACount = 17
-for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
+CCount = 14
+for caseIndex in range(CCount*mismipIndex,CCount*(mismipIndex+1)):
   lineIndex=4*caseIndex
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
@@ -29,4 +29,5 @@ for caseIndex in range(ACount*mismipIndex,ACount*(mismipIndex+1)):
   if status != 0:
     print "runOneCase.py failed! Exiting."
     exit(status)  
-  
+ 
+
