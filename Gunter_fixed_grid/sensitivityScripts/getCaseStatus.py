@@ -7,55 +7,61 @@ caseList = [line.rstrip('\n') for line in open(caseFile)]
 
 caseCount = len(caseList)/4
 
+
 exptFirstCase = []
 for caseIndex in range(caseCount):
   lineIndex=4*caseIndex
+  prevResult=caseList[lineIndex+2]
+  if(prevResult == "none"):
+    exptFirstCase.append(caseIndex)
 
 exptFirstCase.append(caseCount)
 
-exptIndex = 0
-caseNumber = 0
-for caseIndex in range(caseCount):
-  lineIndex=4*caseIndex
+exptCount = len(exptFirstCase)-1
+for exptIndex in range(exptCount):
+  caseCount = exptFirstCase[exptIndex+1] - exptFirstCase[exptIndex]
+  lastCase = -1
+  for caseIndex in range(caseCount):
+    lineIndex=4*(caseIndex + exptFirstCase[exptIndex])
+    dir = caseList[lineIndex]
+    prefix = caseList[lineIndex+1]
+    exists = False
+    if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
+      stage = 'final'
+      lastCase = caseIndex
+    elif(os.path.exists("%s/%s_inProgress.pyda"%(dir,prefix))):
+      stage = 'inProgress'
+      lastCase = caseIndex
+    else:
+      break
+
+  if lastCase == -1:
+    lineIndex=4*(exptFirstCase[exptIndex])
+    dir = caseList[lineIndex]
+    prefix = caseList[lineIndex+1]
+    print "expt %i: %s/%s not started."%(exptIndex,dir,prefix)
+    continue
+
+  lineIndex=4*(lastCase + exptFirstCase[exptIndex])
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
-  prevResult=caseList[lineIndex+2]
-  if(prevResult == "none"):
-    caseNumber = 0
-  if(os.path.exists("%s/%s_final.pyda"%(dir,prefix))):
-    print "%i %i: %s/%s final."%(exptIndex, caseNumber, dir,prefix)
+  logFile="%s/%s_%s.log"%(dir,prefix,stage)
+  if(not os.path.exists(logFile)):
+    print "expt %i, case %i: %s/%s log file not found."%(exptIndex,lastCase,
+      dir,prefix)
     continue
-  logFile="%s/%s_final.log"%(dir,prefix)
-  if(os.path.exists(logFile)):
-    error=False
-    for line in open(logFile):
-      if "blew" in line:
-        print "%i %i: %s/%s failed in final."%(exptIndex, caseNumber, dir,prefix)
-        error=True
-        break
-      if "Error" in line:
-        print "%i %i: %s/%s failed in final."%(exptIndex, caseNumber, dir,prefix)
-        error=True
-        break
-    if error:
-      continue
-
-  logFile="%s/%s_inProgress.log"%(dir,prefix)
-  if(os.path.exists(logFile)):
-    error=False
-    for line in open(logFile):
-      if "blew" in line:
-        print "%i %i: %s/%s failed in inProgress."%(exptIndex, caseNumber, dir,prefix)
-        error=True
-        break
-      if "Error" in line:
-        print "%i %i: %s/%s failed in inProgress."%(exptIndex, caseNumber, dir,prefix)
-        error=True
-        break
-    if not error:
-      print "%i %i: %s/%s inProgress."%(exptIndex, caseNumber, dir,prefix)
-
-  if(prevResult == "none"):
-    exptIndex += 1
-  caseNumber += 1
+  error=False
+  for line in open(logFile):
+    if "blew" in line:
+      error=True
+      break
+    if "Error" in line:
+      error=True
+      break
+  if error:
+    print "expt %i, case %i: %s/%s failed in %s."%(exptIndex,lastCase,
+      dir,prefix,stage)
+    continue
+  print "expt %i, case %i: %s/%s %s."%(exptIndex,lastCase,
+    dir,prefix,stage)
 

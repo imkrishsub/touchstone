@@ -186,7 +186,7 @@ for resIndex in range(len(dxs)):
         prevResult="%s_final.pyda"%prefix
 
 # Iteration over channel width
-      channelString = "--useChannelWidth" #channelStrings[1]
+      channelString = "--useChannel" #channelStrings[1]
       #channelDir = channelDirs[1]
       prevResult = "none"
       print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
