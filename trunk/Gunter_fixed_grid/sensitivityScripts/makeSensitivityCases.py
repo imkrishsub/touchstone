@@ -48,7 +48,7 @@ Ws = [ "0.5", "1", "2", "3", "4", "5", "10", "20", "100" ]
 # Remark: when doing this experiment, we need to adjust the values of Nxs!
 # xc = [ "1.7", "1.8", "1.9", "2.0", "2.2", "2.4" ]
 
-defaultTol = 1e-3
+defaultTol = 5e-2
 tols = defaultTol*numpy.ones((len(dxs),len(ps),len(glpStrings)))
 
 # for most cases, we hold the time step roughtly constant
