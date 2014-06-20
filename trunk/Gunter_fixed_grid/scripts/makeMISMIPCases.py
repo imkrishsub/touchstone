@@ -3,14 +3,13 @@ import numpy
 fileName = "allMISMIPCases.txt"
 
 slope_ref = "778.5"
-#C_ref = "7.624e6"
+C_ref = "7.624e6"
 lambda_ref = "2.0"
 xc = "1.760"
 xgInit = "0.8"
 eps_s = "1e-10"
 m_0 = "0.5"
 Ab = "3.1688e-24"
-A_ref = "4.6416e-25"
 
 dxs = [ "3.2", "1.6", "0.8", "0.4", "0.2", "0.1", "0.05" ]
 Nxs = [ "551", "1101", "2201", "4401", "8801", "17601", "35201" ]
@@ -19,14 +18,9 @@ dtInits = [ "1e-6", "1e-6", "1e-6", "1e-6", "1e-6", "1e-6", "1e-6" ]
 ps = [ 0., 0.25, 0.5, 0.75, 1.]
 glpStrings = [ "", "--useGLP" ]
 glpDirs = [ "nonGLP", "GLP" ]
-#As = [ "4.6416e-24", "2.1544e-24", "1.0000e-24", 
-#      "4.6416e-25", "2.1544e-25", "1.0000e-25", 
-#      "4.6416e-26", "2.1544e-26", "1.0000e-26" ]
-
-Cs = [ "0.316e6", "0.501e6", "0.794e6", "1.258e6", "1.994e6", "3.160e6",
-      "5.008e6", "7.624e6", "12.58e6", "19.94e6", "31.60e6", "50.08e6", 
-      "79.38e6", "125.8e6" ]
-
+As = [ "4.6416e-24", "2.1544e-24", "1.0000e-24", 
+      "4.6416e-25", "2.1544e-25", "1.0000e-25", 
+      "4.6416e-26", "2.1544e-26", "1.0000e-26" ]
 defaultTol = 1e-3
 tols = defaultTol*numpy.ones((len(dxs),len(ps),len(glpStrings)))
 
@@ -59,7 +53,7 @@ tols[3,1,1] = 5e-2 # 0.4 km, p=0.25, GLP
 tols[0,2,1] = 5e-2 # 3.2 km, p=0.5, GLP
 tols[1,2,1] = 5e-2 # 1.6 km, p=0.5, GLP
 
-commonArgs = "--folder=. --linearSlope=%s --A=%s --lambda_0=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(slope_ref,A_ref,lambda_ref,eps_s,xgInit,m_0,Ab)
+commonArgs = "--folder=. --linearSlope=%s --C=%s --lambda_0=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(slope_ref,C_ref,lambda_ref,eps_s,xgInit,m_0,Ab)
 # uncomment the following to include plotting
 #commonArgs="%s --plot --plotContinuous"%(commonArgs) 
 
@@ -80,24 +74,24 @@ for resIndex in range(len(dxs)):
       prevResult = "none"
       print "MISMIP expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
       exptIndex += 1
-      for C in Cs:
+      for A in As:
         dir = "%s/p_%.2f/res_%s"%(glpDir,p,dx)
 
-        prefix = "C_%s_adv"%C
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,dtInit,goalCFL,dx,Nx,xc,glpString,tol)
+        prefix = "A_%s_adv"%A
+        args = "%s --maxSteps=1000000 --p=%.2f --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s --toleranceInner=%s" \
+          %(commonArgs,p,A,dtInit,goalCFL,dx,Nx,xc,glpString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
         filePointer.write("%s\n"%args)
         prevResult="%s_final.pyda"%prefix
 
-      for C in Cs[-2::-1]:
+      for A in As[-2::-1]:
         dir = "%s/p_%.2f/res_%s"%(glpDir,p,dx)
 
-        prefix = "C_%s_ret"%C
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,dtInit,goalCFL,dx,Nx,xc,glpString,tol)
+        prefix = "A_%s_ret"%A
+        args = "%s --maxSteps=1000000 --p=%.2f --A=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s --toleranceInner=%s" \
+          %(commonArgs,p,A,dtInit,goalCFL,dx,Nx,xc,glpString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
