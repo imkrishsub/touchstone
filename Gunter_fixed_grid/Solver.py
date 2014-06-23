@@ -478,7 +478,7 @@ class Solver:
     if(not self.useChannel):
         lateralEff = 0.
     else:
-        lateralEff = self.omega*Hk*self.W**(1./n+1)
+        lateralEff = self.omega*Hk/self.W**(1./n+1)
       
     lateralCoeff = -lateralEff*abs_u**(1./n-1)
 
