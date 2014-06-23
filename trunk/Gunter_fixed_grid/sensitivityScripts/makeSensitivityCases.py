@@ -42,7 +42,8 @@ lambdas = [ "3.125e-2", "6.250e-2", "1.250e-1", "2.500e-1", "5.000e-1",
            "1.600e+1", "3.200e+1", "6.400e+1", "1.280e+2" ]
 
 # We need to start to iterate on the biggest channel width (the least advanced GL).
-Ws = [ "0.5", "1", "2", "3", "4", "5", "10", "20", "100" ]
+#Ws = [ "0.5", "1", "2", "3", "4", "5", "10", "20", "100" ]
+Ws = ["100", "20", "10", "5", "4", "3", "2", "1", "0.5"]
 
 # We need to start to iterate on the closest calving front (the least advanced GL).
 # Remark: when doing this experiment, we need to adjust the values of Nxs!
@@ -57,12 +58,21 @@ tols = defaultTol*numpy.ones((len(dxs),len(ps),len(glpStrings)))
 p0GoalCFLs = numpy.array([ 0.5, 1., 4., 8., 16., 32., 64.])
 p1GoalCFLs = p0GoalCFLs
 goalCFLs = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
+goalCFLsvaryC = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
+goalCFLsvaryslope = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
+goalCFLsvarylambda = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
+goalCFLsvaryW = numpy.zeros((len(dxs),len(ps),len(glpStrings)))
 for resIndex in range(len(dxs)):
   for pIndex in range(len(ps)):
     for glpIndex in range(len(glpStrings)):
       p = ps[pIndex]
       goalCFLs[resIndex,pIndex] = \
         ((1.-p)*p0GoalCFLs[resIndex]+p*p1GoalCFLs[resIndex])
+# Added a special CFL goal for the vary lambda exp. 
+      goalCFLsvaryC[resIndex,pIndex] = p0GoalCFLs[resIndex]
+      goalCFLsvaryslope[resIndex,pIndex] = p0GoalCFLs[resIndex]
+      goalCFLsvarylambda[resIndex,pIndex] = p0GoalCFLs[resIndex]/2
+      goalCFLsvaryW[resIndex,pIndex] = p0GoalCFLs[resIndex]/2
 
 # a few cases are very stubborn and require special treatment
 # p=0.25 at 3.2 and 1.6 km resolution
@@ -79,6 +89,19 @@ for resIndex in range(len(dxs)):
 #goalCFLs[1,2] = 0.01
 #tols[0,2,1] = 5e-2 # 3.2 km, p=0.5, GLP
 #tols[1,2,1] = 5e-2 # 1.6 km, p=0.5, GLP
+
+
+# Just added (Gunter on 06-23-14)
+# Special treatment for some stubborn cases after running debug mode (all nonGLP)
+# for vary_C experiment: p = 0 at res = 0.8 and 0.05 km
+# for vary_slope experiment: p = 0 at res = 0.1 km
+# for vary_W experiment: p = 0 at res = 0.8 and 0.05 km
+goalCFLsvaryC[2,0] = goalCFLsvaryC[2,0]/2
+goalCFLsvaryC[6,0] = goalCFLsvaryC[6,0]/4
+goalCFLsvaryslope[5,0] = goalCFLsvaryslope[5,0]/2
+goalCFLsvaryW[2,0] = goalCFLsvaryW[2,0]/2
+goalCFLsvaryW[6,0] = goalCFLsvaryW[6,0]/4
+
 
 commonArgs = "--folder=. --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(A_ref,eps_s,xgInit,m_0,Ab)
 # uncomment the following to include plotting
@@ -99,7 +122,10 @@ for resIndex in range(len(dxs)):
       dx = dxs[resIndex]
       #dt = dts[resIndex]
       dtInit = dtInits[resIndex]
-      goalCFL = "%.2f"%goalCFLs[resIndex,pIndex,glpIndex]
+      goalCFLvaryC = "%.2f"%goalCFLsvaryC[resIndex,pIndex,glpIndex]
+      goalCFLvaryslope = "%.2f"%goalCFLsvaryslope[resIndex,pIndex,glpIndex]
+      goalCFLvarylambda = "%.2f"%goalCFLsvarylambda[resIndex,pIndex,glpIndex]
+      goalCFLvaryW = "%.2f"%goalCFLsvaryW[resIndex,pIndex,glpIndex]
       tol = "%.1e"%tols[resIndex,pIndex,glpIndex]
       prevResult = "none"
       print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
@@ -110,7 +136,7 @@ for resIndex in range(len(dxs)):
       
         prefix = "C_%s_adv"%C
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)
+          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFLvaryC,dx,Nx,xc,glpString,channelString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -122,7 +148,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "C_%s_ret"%C
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)
+          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFLvaryC,dx,Nx,xc,glpString,channelString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -138,7 +164,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "Slope_%s_adv"%slope
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)
+          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFLvaryslope,dx,Nx,xc,glpString,channelString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)      
@@ -150,7 +176,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "Slope_%s_ret"%slope
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)
+          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFLvaryslope,dx,Nx,xc,glpString,channelString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -166,7 +192,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "lambda_0_%s_adv"%Lambda
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)     
+          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFLvarylambda,dx,Nx,xc,glpString,channelString,tol)     
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -178,7 +204,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "lambda_0_%s_ret"%Lambda
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,tol)
+          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFLvarylambda,dx,Nx,xc,glpString,channelString,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -186,6 +212,8 @@ for resIndex in range(len(dxs)):
         prevResult="%s_final.pyda"%prefix
 
 # Iteration over channel width
+      xgInitW = 0.9
+      commonArgsW = "--folder=. --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(A_ref,eps_s,xgInitW,m_0,Ab)
       channelString = "--useChannel" #channelStrings[1]
       #channelDir = channelDirs[1]
       prevResult = "none"
@@ -196,7 +224,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "W_%s_adv"%W
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --W=%s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,W,tol)
+          %(commonArgsW,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFLvaryW,dx,Nx,xc,glpString,channelString,W,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -208,7 +236,7 @@ for resIndex in range(len(dxs)):
 
         prefix = "W_%s_ret"%W
         args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --W=%s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFL,dx,Nx,xc,glpString,channelString,W,tol)
+          %(commonArgsW,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFLvaryW,dx,Nx,xc,glpString,channelString,W,tol)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
