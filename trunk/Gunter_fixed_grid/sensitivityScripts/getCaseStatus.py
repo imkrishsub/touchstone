@@ -46,9 +46,14 @@ for exptIndex in range(exptCount):
   dir = caseList[lineIndex]
   prefix = caseList[lineIndex+1]
   logFile="%s/%s_%s.log"%(dir,prefix,stage)
+  casesToGo = caseCount-1-lastCase
+  if(casesToGo == 0):
+    toGoString = "expt done"
+  else:
+    toGoString = "%i to go"%casesToGo
   if(not os.path.exists(logFile)):
-    print "expt %i, case %i: %s/%s log file not found."%(exptIndex,lastCase,
-      dir,prefix)
+    print "expt %i, case %i, %s: %s/%s log file not found."%(exptIndex,
+       lastCase, toGoString, dir,prefix)
     continue
   error=False
   for line in open(logFile):
@@ -59,9 +64,9 @@ for exptIndex in range(exptCount):
       error=True
       break
   if error:
-    print "expt %i, case %i: %s/%s failed in %s."%(exptIndex,lastCase,
-      dir,prefix,stage)
+    print "expt %i, case %i, %s: %s/%s failed in %s."%(exptIndex,
+       lastCase, toGoString, dir, prefix, stage)
     continue
-  print "expt %i, case %i: %s/%s %s."%(exptIndex,lastCase,
-    dir,prefix,stage)
+  print "expt %i, case %i, %s: %s/%s %s."%(exptIndex,
+     lastCase, toGoString, dir, prefix, stage)
 
