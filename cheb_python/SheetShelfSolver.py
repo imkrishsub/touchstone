@@ -4,26 +4,38 @@ import scipy.optimize
 import Chebyshev
 import numpy.linalg as linalg
 from pprint import pprint
-from initH import initH
+import initH
 import os
 
 def findSteadyStateValue(value, name, solution):
   setattr(solution, name, value)
+  print value
   return solution.findSteadyState()
   
 def findSteadyStateLog(logValue, name, solution):
   setattr(solution, name, 10**logValue)
   return solution.findSteadyState()
   
-class SteadyStateSheetShelf:
+class SheetShelfSolver:
   def __init__(self, options):
     self.options = options
+
+    # put all the variables that can be optimized into self
+    self.A = options.A
+    self.C = options.C
+    self.lambda_0 = options.lambda_0
+    self.linearSlope = options.linearSlope
+    self.W = options.W
+    self.p = options.p
+    self.xg = options.xg
+    
+    self.Nx = options.Nx
     if(options.poly):
       self.computeB = self.computeBPoly
     else:
       self.computeB = self.computeBLinear
 
-    self.cheb = Chebyshev.Chebyshev(options.Nx)
+    self.cheb = Chebyshev.Chebyshev(self.Nx)
     
     self.delta = 1.0 - options.rho_i/options.rho_w
 
@@ -52,14 +64,14 @@ class SteadyStateSheetShelf:
   def updateNondimConstants(self):
     self.NBar = options.rho_i*options.g*self.HBar
     self.taudBar = self.NBar*self.HBar/self.xBar
-    self.taubBar = options.C*self.uBar**(1./options.n)
+    self.taubBar = self.C*self.uBar**(1./options.n)
     self.Kappa = (options.m_0*self.uBar)/(self.lambda_0*options.Ab)/self.NBar**options.n
     self.gamma = self.taubBar/self.taudBar
 
-    self.taulBar = (options.A**(-1./options.n))*(self.uBar/self.xBar)**(1./options.n)*self.HBar/self.xBar
+    self.taulBar = (self.A**(-1./options.n))*(self.uBar/self.xBar)**(1./options.n)*self.HBar/self.xBar
     self.epsilon = self.taulBar/(2*self.taudBar)
 
-    self.tauWbar = self.HBar/self.WBar*(5*self.uBar/(2*options.A*self.WBar))**(1./options.n)
+    self.tauWbar = self.HBar/self.WBar*(5*self.uBar/(2*self.A*self.WBar))**(1./options.n)
     self.omega = self.tauWbar/self.taudBar
     
 
@@ -86,24 +98,20 @@ class SteadyStateSheetShelf:
   
     self.brentQIter = 0
     self.initWithPrev = True
-    try:
-      value = numpy.array(scipy.optimize.brentq(function, lower, upper, 
+    retry = False
+    #try:
+    value = numpy.array(scipy.optimize.brentq(function, lower, upper, 
                                              xtol=options.tolerance, args=(paramToOptimize,self)))
-    except ValueError as e:
-      print "Brentq failed:", e
-      print "Trying again without initializing from previous Hx"
-      self.brentQIter = 0
-      self.initWithPrev = False
-      try:
-        value = numpy.array(scipy.optimize.brentq(function, lower, upper, 
-                                               xtol=options.tolerance, args=(paramToOptimize,self)))
-      except ValueError as e:
-        print "Brentq failed:", e
-        return False
+#    except ValueError as e:
+#      print "Brentq failed:", e
+#      if(self.brentQIter > 0):
+#        retry = True
+#      else:
+#        return False
 
-    if(numpy.abs(self.resBC) > options.tolerance):
+    if(retry or (numpy.abs(self.resBC) > options.tolerance)):
       print "Brentq failed: resBC is larger than the tolerance."
-      print "Trying again without initializing from previous Hx"
+      print "Trying again without initializing from previous H"
       self.brentQIter = 0
       self.initWithPrev = False
       try:
@@ -124,7 +132,8 @@ class SteadyStateSheetShelf:
 
   def findSteadyState(self):
     options = self.options
-    if(self.computeB(options.xg) <= 0.):
+    print self.xg
+    if(self.computeB(self.xg) <= 0.):
       self.resBC = 1e8
       raise ValueError("b <= 0 at grounding line. Cannot proceed with Brentq")
       
@@ -173,7 +182,8 @@ class SteadyStateSheetShelf:
 
   def initializeH(self):
     initialized = True
-    Hf_xg = self.computeB(self.xg)/(1.0-self.delta)
+    (b_xg,bx_xg) = self.computeB(self.xg)
+    Hf_xg = b_xg/(1.0-self.delta)
     if(self.initWithPrev and hasattr(self,'Hprev1')):
       if(self.brentQIter > 1):
         d1 = numpy.abs(self.xgprev1-self.xg)
@@ -198,19 +208,27 @@ class SteadyStateSheetShelf:
       H = a*H+b
       self.initH = H
     else:
-      (HGuessSheet,xgGuess) = initH(self,self.minXg,self.maxXg)
-      if(xgGuess > self.xc):
-        print "xgGuess=%f > xc=%f: cannot proceed!"%(xgGuess,self.xc)
+      options = self.options
+#      if(options.paramToOptimize == 'xg'):
+#        (HGuessSheet,xgGuess) = initH.initHBounded(self,options.minValue,options.maxValue)
+#        self.xg = xgGuess
+#      else:
+      (HGuessSheet,xgGuess) = initH.initH(self,self.xg)
+      if(xgGuess > options.xc):
+        print "xgGuess=%f > xc=%f: cannot proceed!"%(xgGuess,options.xc)
         exit(1)
+      print "initial xg:", xgGuess
       H = numpy.zeros((2*self.Nx))
       H[0:self.Nx] = HGuessSheet
-      uxg = self.a*xgGuess/HGuessSheet[-1]
-      xShelf = xgGuess + (self.xc-xgGuess)*self.cheb.x
-      const = (self.delta*self.a/(8.*self.epsilon))**self.n
-      uShelf = (const*(xShelf**(self.n+1)-xgGuess**(self.n+1)) + uxg**(self.n+1))**(1./(self.n + 1))
-      H[self.Nx:2*self.Nx] = self.a*xShelf/uShelf
+      uxg = options.a*xgGuess/HGuessSheet[-1]
+      xShelf = xgGuess + (options.xc-xgGuess)*self.cheb.x
+      const = (self.delta*options.a/(8.*self.epsilon))**options.n
+      uShelf = (const*(xShelf**(options.n+1)-xgGuess**(options.n+1)) + uxg**(options.n+1))**(1./(options.n + 1))
+      H[self.Nx:2*self.Nx] = options.a*xShelf/uShelf
       
       self.initH = H
+      self.initXg = xgGuess
+      self.H = H        
 
   def computeBLinear(self,x):
       shoofx = 750000.
@@ -242,7 +260,7 @@ class SteadyStateSheetShelf:
     try:
       filePointer = open(fileName,'rb')
       Nx = numpy.fromfile(filePointer, dtype=int, count=1)[0]
-      if(Nx != self.options.Nx):
+      if(Nx != self.Nx):
         print "Bad Nx in file."
         exit(1)
   
@@ -257,13 +275,25 @@ class SteadyStateSheetShelf:
     fileName = "%s/%s"%(self.options.folder,self.options.outFile)
     print "writing to: ", fileName
     filePointer = open(fileName,'wb')
-    Nx = numpy.array(self.options.Nx,int)
+    Nx = numpy.array(self.Nx,int)
     Nx.tofile(filePointer)
     xg = numpy.array(self.xg)
     xg.tofile(filePointer)
     self.H.tofile(filePointer)
     self.u.tofile(filePointer)
     self.x.tofile(filePointer)
+    value = numpy.array(self.A)
+    value.tofile(filePointer)
+    value = numpy.array(self.C)
+    value.tofile(filePointer)
+    value = numpy.array(self.lambda_0)
+    value.tofile(filePointer)
+    value = numpy.array(self.linearSlope)
+    value.tofile(filePointer)
+    value = numpy.array(self.W)
+    value.tofile(filePointer)
+    value = numpy.array(self.p)
+    value.tofile(filePointer)
     filePointer.close()
  
   def absS(self,x):
@@ -280,8 +310,8 @@ class SteadyStateSheetShelf:
     
   def derivX(self,field):
     options = self.options
-    xg = options.xg
-    Nx = options.Nx
+    xg = self.xg
+    Nx = self.Nx
     xc = options.xc
     DxSheet = self.cheb.Dx/xg
     DxShelf = self.cheb.Dx/(xc-xg)
@@ -292,8 +322,8 @@ class SteadyStateSheetShelf:
     
   def updateX(self):
     options = self.options
-    xg = options.xg
-    Nx = options.Nx
+    xg = self.xg
+    Nx = self.Nx
     xc = options.xc
     xSheet = xg*self.cheb.x
     xShelf = xg + (xc-xg)*self.cheb.x
@@ -308,8 +338,8 @@ class SteadyStateSheetShelf:
     self.updateX()
  
     options = self.options
-    xg = options.xg
-    Nx = options.Nx
+    xg = self.xg
+    Nx = self.Nx
     xc = options.xc
     DxSheet = self.cheb.Dx/xg
     DxShelf = self.cheb.Dx/(xc-xg)
@@ -317,7 +347,7 @@ class SteadyStateSheetShelf:
     Dx[0:Nx,0:Nx] = DxSheet
     Dx[Nx:2*Nx,Nx:2*Nx] = DxShelf
   
-    p = options.p
+    p = self.p
     Kappa = self.Kappa
     gamma = self.gamma
     epsilon = self.epsilon
@@ -326,7 +356,7 @@ class SteadyStateSheetShelf:
     n = options.n
     
     a = options.a
-    W = options.W
+    W = self.W
 
     if(xg >= xc):
       print "Error: xg=%f >= xc=%f. Exiting..."%(xg,xc)
@@ -337,7 +367,7 @@ class SteadyStateSheetShelf:
     
     Hx = self.derivX(H)
 
-    (b,bx) = self.computeB(x,self)
+    (b,bx) = self.computeB(x)
     
     Hf = self.maxS(b[0:Nx])/(1-delta)
     Np = H[0:Nx]*(self.maxS(1.0 - Hf/H[0:Nx]))**p
@@ -361,11 +391,11 @@ class SteadyStateSheetShelf:
     nu = 4.*epsilon*(abs_ux)**(1./n-1.)
     abs_u = self.absS(u)
     basal = numpy.zeros(u.shape)
-    if(self.useSchoofBasal):
-      gammaPrime = options.C*self.uBar**(1./n)/(options.rho_i*options.g*self.HBar**2/self.xBar)
+    if(options.useSchoofBasal):
+      gammaPrime = self.C*self.uBar**(1./n)/(options.rho_i*options.g*self.HBar**2/self.xBar)
       basal[0:Nx] = -gammaPrime*abs_u[0:Nx]**(1./n)*u[0:Nx]/abs_u[0:Nx]
     else:
-      basal[0:Nx] = -gamma*Np*(abs_u[0:Nx]/(Kappa*abs_u[0:Nx] + Np**n))**(1./n)*u/abs_u[0:Nx]
+      basal[0:Nx] = -gamma*Np*(abs_u[0:Nx]/(Kappa*abs_u[0:Nx] + Np**n))**(1./n)*u[0:Nx]/abs_u[0:Nx]
     
     nux = nu*(1./n - 1)*uxx/abs_ux
     
@@ -378,7 +408,7 @@ class SteadyStateSheetShelf:
     
     
     #tau_w = -omega*H*W^(-1-1/n)*|u|^(1/n-1) u
-    if(self.useChannelWidth):
+    if(options.useChannelWidth):
       lateralCoeff = -omega*W**(-1.-1./n)*abs_u**(1/n-1)*u
     else:
       lateralCoeff = numpy.zeros(x.shape)
@@ -386,7 +416,7 @@ class SteadyStateSheetShelf:
     lateral = lateralCoeff*H
     
     residual = longi + basal + driving + lateral
-    
+     
     # tau_l = H nu ux
     # ux = (a - u Hx)/H
     # tau_l = nu (a - u Hx)
@@ -403,7 +433,8 @@ class SteadyStateSheetShelf:
     rhs = -longiCoeff1 - basal - drivingCoeff2
     
     # Hx = bx at the ice divide
-    M[0,:] = DxSheet[0,:]
+    M[0,:] = 0
+    M[0,0:Nx] = DxSheet[0,:]
     rhs[0] =  bx[0]
     
     # H = Hf at the grounding line
@@ -412,12 +443,12 @@ class SteadyStateSheetShelf:
     rhs[Nx-1] = Hf[Nx-1]
     M[Nx,:] = 0.
     M[Nx,Nx] = 1.
-    rhs[Nx] = Hf[Nx]
+    rhs[Nx] = Hf[Nx-1]
     
     # Hx is continuous at the grounding line
-    M[2*Nx,0:Nx] = DxSheet[Nx-1,:]
-    M[2*Nx,Nx:2*Nx] = -DxShelf[0,:]
-    rhs[2*Nx] = 0.
+    M[2*Nx-1,0:Nx] = DxSheet[Nx-1,:]
+    M[2*Nx-1,Nx:2*Nx] = -DxShelf[0,:]
+    rhs[2*Nx-1] = 0.
     
     
     newH = linalg.solve(M,rhs)
@@ -428,20 +459,22 @@ class SteadyStateSheetShelf:
                                     numpy.max(numpy.abs(solver_res[Nx+1:2*Nx-1])))
 
     newU = a*x/newH
+    
+    
    
     
-    if(self.plot):
+    if(options.plot):
       import matplotlib.pyplot as plt
       newS = numpy.zeros(x.shape)
       newS[0:Nx] = newH[0:Nx]-b[0:Nx]
       newS[Nx:2*Nx] = delta*newH[Nx:2*Nx]
-      if(self.plotContinuous):
+      if(options.plotContinuous):
         plt.ion()
       temp = nu[-1]*ux[Nx-1]/(0.5*self.delta) - b[Nx-1]
       fig = plt.figure(1)
       if(len(fig.axes) > 0):
         fig.axes[0].cla()
-      plt.plot(x,s, 'b', x, newS, 'r', x, -b, 'k', x, Hf-b, 'g',
+      plt.plot(x,s, 'b', x, newS, 'r', x, -b, 'k', x[0:Nx], Hf-b[0:Nx], 'g',
                x, temp*numpy.ones(x.shape),'k--')
       fig = plt.figure(2)
       if(len(fig.axes) > 0):
@@ -461,10 +494,7 @@ class SteadyStateSheetShelf:
       if(len(fig.axes) > 0):
         fig.axes[0].cla()
       plt.plot(x,ux,'b',x,a/H,'r',x,-u*Hx/H,'g')
-      fig = plt.figure(6)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
-      if(self.plotContinuous):
+      if(options.plotContinuous):
         plt.draw()
         plt.pause(0.0001)
       else:
@@ -482,8 +512,8 @@ from optparse import OptionParser
     
 parser = OptionParser()
 
-parser.add_option("--minValue", type="float", default=0.75, dest="minValue")
-parser.add_option("--maxValue", type="float", default=1.2, dest="maxValue")
+parser.add_option("--minValue", type="float", default=1.0, dest="minValue")
+parser.add_option("--maxValue", type="float", default=2.0, dest="maxValue")
 parser.add_option("--paramToOptimize", type="string", default="xg", dest="paramToOptimize")
 
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
@@ -492,12 +522,17 @@ parser.add_option("--W", type="float", default=1.0, dest="W")
 
 parser.add_option("--xg", type="float", default=1.0, dest="xg")
 parser.add_option("--p", type="float", default=0.0, dest="p")
-parser.add_option("--A", type="float", default=1e-25, dest="A")
+parser.add_option("--A", type="float", default=2.1544e-25, dest="A")
 parser.add_option("--C", type="float", default=7.624e6, dest="C")
 parser.add_option("--rho_i", type="float", default=900.0, dest="rho_i")
+parser.add_option("--rho_w", type="float", default=1000.0, dest="rho_w")
+parser.add_option("--g", type="float", default=9.8, dest="g")
+parser.add_option("--n", type="float", default=3.0, dest="n")
 parser.add_option("--a", type="float", default=1.0, dest="a")
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
-parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
+parser.add_option("--lambda_0", type="float", default=2.0, dest="lambda_0")
+parser.add_option("--m_0", type="float", default=0.5, dest="m_0")
+parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab")
 parser.add_option("--poly", action="store_true", dest="poly")
 
 parser.add_option("--inFile", type="string", default="none", dest="inFile")
@@ -508,8 +543,6 @@ parser.add_option("--Nx", type="int", default=513, dest="Nx")
 
 parser.add_option("--eps_s", type="float", default=1e-8, dest="eps_s")
 parser.add_option("--tolerance", type="float", default=1e-10, dest="tolerance")
-parser.add_option("--minXg", type="float", default=0.75, dest="minXg")
-parser.add_option("--maxXg", type="float", default=1.2, dest="maxXg")
 
 parser.add_option("--plot", action="store_true", dest="plot")
 parser.add_option("--plotContinuous", action="store_true", dest="plotContinuous")
@@ -517,12 +550,12 @@ parser.add_option("--useSchoofBasal", action="store_true", dest="useSchoofBasal"
 
 options, args = parser.parse_args()
 
-solution = SteadyStateSheetShelf(options)
+solver = SheetShelfSolver(options)
 
 
-success = solution.findSteadyStateBrentQ()
+success = solver.findSteadyStateBrentQ()
 if(not success):
   print "Did not find a solution, not writing to a file."
   exit()
 
-solution.writeResults()
+solver.writeResults()
