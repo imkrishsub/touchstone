@@ -9,7 +9,6 @@ import os
 
 def findSteadyStateValue(value, name, solution):
   setattr(solution, name, value)
-  print value
   return solution.findSteadyState()
   
 def findSteadyStateLog(logValue, name, solution):
@@ -132,18 +131,19 @@ class SheetShelfSolver:
 
   def findSteadyState(self):
     options = self.options
-    print self.xg
     if(self.computeB(self.xg) <= 0.):
       self.resBC = 1e8
       raise ValueError("b <= 0 at grounding line. Cannot proceed with Brentq")
       
     print "BrentQ iteration: ", self.brentQIter+1
+    print options.paramToOptimize, ":", getattr(self,options.paramToOptimize)
     
     self.initializeH()
   
-    fracTolerance = 1e-3
+    fracTolerance = 1e-5
     prevResBC = 0.0
     kMax = 200
+    self.HScale = 1.0
     for k in range(kMax):
       print "k = ", k
       self.iterateUH()
@@ -159,7 +159,7 @@ class SheetShelfSolver:
         frac = deltaResBC/numpy.abs(self.resBC)
       print "resBC:", self.resBC, deltaResBC, frac, fracTolerance
       print "resStress:", self.resStress, max(2*self.noiseFloor,options.tolerance)
-      if((frac < fracTolerance) and (numpy.abs(self.resBC) > options.tolerance)):
+      if((frac < fracTolerance) and (self.HScale == 1.0) and (numpy.abs(self.resBC) > options.tolerance)):
         # resBC isn't very close to zero, and it seems to be steady so there's no point if being too exact.
         break
       if(self.resStress < max(2*self.noiseFloor,options.tolerance)):
@@ -457,11 +457,19 @@ class SheetShelfSolver:
     residual_check = numpy.dot(M,H) - rhs
     self.noiseFloor = numpy.maximum(numpy.max(numpy.abs(solver_res[1:Nx-1])),
                                     numpy.max(numpy.abs(solver_res[Nx+1:2*Nx-1])))
+                                    
+                                    
+    minScale = 0.1
+    self.HScale = 1.0
+    if(numpy.any(newH < minScale*H)):
+      print "Have to scale newH so H doesn't got through zero." 
+      self.HScale = numpy.amin(newH/H)
+      print self.HScale
+      alpha = (1.0-minScale)/(1.0-self.HScale)
+      print alpha
+      newH = alpha*newH + (1-alpha)*H
 
-    newU = a*x/newH
-    
-    
-   
+    newU = a*x/newH  
     
     if(options.plot):
       import matplotlib.pyplot as plt
