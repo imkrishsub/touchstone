@@ -98,30 +98,30 @@ class SheetShelfSolver:
     self.brentQIter = 0
     self.initWithPrev = True
     retry = False
-    #try:
-    value = numpy.array(scipy.optimize.brentq(function, lower, upper, 
-                                             xtol=options.tolerance, args=(paramToOptimize,self)))
-#    except ValueError as e:
-#      print "Brentq failed:", e
-#      if(self.brentQIter > 0):
-#        retry = True
-#      else:
-#        return False
+    try:
+      (value,r) = scipy.optimize.brentq(function, lower, upper,
+        xtol=options.tolerance, args=(paramToOptimize,self), full_output=True)
+    except ValueError as e:
+      print "Brentq failed:", e
+      if(self.brentQIter > 0):
+        retry = True
+      else:
+        return False
 
-    if(retry or (numpy.abs(self.resBC) > options.tolerance)):
-      print "Brentq failed: resBC is larger than the tolerance."
+    if(retry or not r.converged):
+      print "Brentq failed: either there was an error or lack of convergence."
       print "Trying again without initializing from previous H"
       self.brentQIter = 0
       self.initWithPrev = False
       try:
-        value = numpy.array(scipy.optimize.brentq(function, lower, upper, 
-                                               xtol=options.tolerance, args=(paramToOptimize,self)))
+        (value,r) = scipy.optimize.brentq(function, lower, upper,
+          xtol=options.tolerance, args=(paramToOptimize,self), full_output=True)
       except ValueError as e:
         print "Brentq failed:", e
         return False
 
-      if(numpy.abs(self.resBC) > options.tolerance):
-        print "Brenq failed: resBC is larger than the tolerance."
+      if(not r.converged):
+        print "Brenq did not converge."
         return False
     
     # make sure the the final solution is with the argument that minimizes the function
