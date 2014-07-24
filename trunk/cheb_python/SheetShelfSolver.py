@@ -97,6 +97,7 @@ class SheetShelfSolver:
   
     self.brentQIter = 0
     self.initWithPrev = True
+    self.maxResBC = 0.0
     retry = False
     try:
       (value,r) = scipy.optimize.brentq(function, lower, upper,
@@ -113,6 +114,7 @@ class SheetShelfSolver:
       print "Trying again without initializing from previous H"
       self.brentQIter = 0
       self.initWithPrev = False
+      self.maxResBC = 0.0
       try:
         (value,r) = scipy.optimize.brentq(function, lower, upper,
           xtol=options.tolerance, args=(paramToOptimize,self), full_output=True)
@@ -143,7 +145,7 @@ class SheetShelfSolver:
     fracTolerance = 1e-4
     prevResBC = 0.0
     kMax = 200
-    self.HScale = 1.0
+    #self.HScale = 1.0
     for k in range(kMax):
       print "k = ", k
       self.iterateUH()
@@ -153,6 +155,7 @@ class SheetShelfSolver:
   
       deltaResBC = numpy.abs(self.resBC-prevResBC)
       prevResBC = self.resBC
+      self.maxResBC = numpy.maximum(numpy.abs(self.resBC),self.maxResBC)
       if(self.resBC == 0.0):
         frac = 0.0
       else:
@@ -177,10 +180,12 @@ class SheetShelfSolver:
           plt.draw()
           plt.pause(0.0001)
         else:
-          plt.show()      
-      print "resBC:", self.resBC, deltaResBC, frac, fracTolerance
+          plt.show()
+      relativeResBC = numpy.abs(self.resBC)/self.maxResBC
+      print "resBC:", self.resBC, deltaResBC, frac, fracTolerance, relativeResBC
       print "resStress:", self.resStress, stressThreshold
-      if((frac < fracTolerance) and (self.HScale == 1.0) and (numpy.abs(self.resBC) > options.tolerance)):
+      #if((frac < fracTolerance) and (self.HScale == 1.0) and (numpy.abs(self.resBC) > options.tolerance)):
+      if((frac < fracTolerance) and (relativeResBC > options.tolerance)):
         # resBC isn't very close to zero, and it seems to be steady so there's no point if being too exact.
         break
       if(self.resStress < stressThreshold):
@@ -569,13 +574,19 @@ class SheetShelfSolver:
       plt.plot(x,s, 'b', x, newS, 'r', x, -b, 'k', x[0:Nx], Hf-b[0:Nx], 'g',
                x, temp*numpy.ones(x.shape),'k--')
       plt.subplot(232)
-      plt.plot(x,solver_res,'b', x, residual, 'r',
-               x, residual_check, 'k--')
+      plt.plot(x[1:Nx-1], solver_res[1:Nx-1], 'b',
+               x[Nx+1:2*Nx-1], solver_res[Nx+1:2*Nx-1], 'b',
+               x[1:Nx-1], residual[1:Nx-1], 'r',
+               x[Nx+1:2*Nx-1], residual[Nx+1:2*Nx-1], 'r',
+               x[1:Nx-1], residual_check[1:Nx-1], 'k--',
+               x[Nx+1:2*Nx-1], residual_check[Nx+1:2*Nx-1], 'k--')
       plt.subplot(233)
       plt.plot(x,longi, 'b', x, basal, 'r', x, driving, 'g', 
                x, lateral, 'm', 
-               x, residual, 'k',
-               x, residual_check, 'k--')
+               x[1:Nx-1], residual[1:Nx-1], 'k',
+               x[Nx+1:2*Nx-1], residual[Nx+1:2*Nx-1], 'k',
+               x[1:Nx-1], residual_check[1:Nx-1], 'k--',
+               x[Nx+1:2*Nx-1], residual_check[Nx+1:2*Nx-1], 'k--')
       plt.subplot(234)
       plt.plot(x,u, 'b', x, newU, 'r', x, a*xg/Hf[Nx-1]*numpy.ones(x.shape,float),'--k')
       plt.subplot(235)
