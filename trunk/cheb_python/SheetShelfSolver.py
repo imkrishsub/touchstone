@@ -140,7 +140,7 @@ class SheetShelfSolver:
     
     self.initializeH()
   
-    fracTolerance = 1e-5
+    fracTolerance = 1e-4
     prevResBC = 0.0
     kMax = 200
     self.HScale = 1.0
@@ -157,12 +157,33 @@ class SheetShelfSolver:
         frac = 0.0
       else:
         frac = deltaResBC/numpy.abs(self.resBC)
+        
+      stressThreshold = max(2*self.noiseFloor,options.tolerance)
+      if(options.plot):
+        import matplotlib.pyplot as plt
+        plt.subplot(231)
+        plt.title(self.resBC)
+        plt.subplot(232)
+        plt.title(deltaResBC)
+        plt.subplot(233)
+        plt.title(frac)
+        plt.subplot(234)
+        plt.title(self.resStress)
+        plt.subplot(235)
+        plt.title(stressThreshold)
+        plt.subplot(236)
+        plt.title("picard: %i, brent: %i"%(k+1,self.brentQIter))
+        if(options.plotContinuous):
+          plt.draw()
+          plt.pause(0.0001)
+        else:
+          plt.show()      
       print "resBC:", self.resBC, deltaResBC, frac, fracTolerance
-      print "resStress:", self.resStress, max(2*self.noiseFloor,options.tolerance)
+      print "resStress:", self.resStress, stressThreshold
       if((frac < fracTolerance) and (self.HScale == 1.0) and (numpy.abs(self.resBC) > options.tolerance)):
         # resBC isn't very close to zero, and it seems to be steady so there's no point if being too exact.
         break
-      if(self.resStress < max(2*self.noiseFloor,options.tolerance)):
+      if(self.resStress < stressThreshold):
         break
     if(k == kMax-1):
       print "Warning: max iterations reached!"
@@ -181,6 +202,7 @@ class SheetShelfSolver:
     return self.resBC
 
   def initializeH(self):
+    options = self.options
     initialized = True
     (b_xg,bx_xg) = self.computeB(self.xg)
     Hf_xg = b_xg/(1.0-self.delta)
@@ -206,9 +228,8 @@ class SheetShelfSolver:
       a = (H0-Hf_xg)/(H0-Hf_old)
       b = H0*(1. - a)
       H = a*H+b
-      self.initH = H
+      self.H = H
     else:
-      options = self.options
 #      if(options.paramToOptimize == 'xg'):
 #        (HGuessSheet,xgGuess) = initH.initHBounded(self,options.minValue,options.maxValue)
 #        self.xg = xgGuess
@@ -227,8 +248,27 @@ class SheetShelfSolver:
       H[self.Nx:2*self.Nx] = options.a*xShelf/uShelf
       
       self.initH = H
-      self.initXg = xgGuess
-      self.H = H        
+      self.H = H
+      
+#    if(options.plot):
+#      import matplotlib.pyplot as plt
+#      if(options.plotContinuous):
+#        plt.ion()
+#      Nx = self.Nx
+#      xSheet = self.xg*self.cheb.x
+#      xShelf = self.xg + (options.xc-self.xg)*self.cheb.x
+#      x = numpy.zeros((2*Nx))
+#      x[0:Nx] = xSheet
+#      x[Nx:2*Nx] = xShelf
+#      fig = plt.figure(1)
+#      if(len(fig.axes) > 0):
+#        fig.axes[0].cla()
+#      plt.plot(x,H, 'b')
+#      if(options.plotContinuous):
+#        plt.draw()
+#        plt.pause(0.0001)
+#      else:
+#        plt.show()           
 
   def computeBLinear(self,x):
       shoofx = 750000.
@@ -313,11 +353,9 @@ class SheetShelfSolver:
     xg = self.xg
     Nx = self.Nx
     xc = options.xc
-    DxSheet = self.cheb.Dx/xg
-    DxShelf = self.cheb.Dx/(xc-xg)
     field_x = numpy.zeros(field.shape)
-    field_x[0:Nx] = numpy.dot(DxSheet,field[0:Nx])
-    field_x[Nx:2*Nx] = numpy.dot(DxShelf,field[Nx:2*Nx])
+    field_x[0:Nx] = numpy.dot(self.cheb.Dx,field[0:Nx])/xg
+    field_x[Nx:2*Nx] = numpy.dot(self.cheb.Dx,field[Nx:2*Nx])/(xc-xg)
     return field_x
     
   def updateX(self):
@@ -343,9 +381,9 @@ class SheetShelfSolver:
     xc = options.xc
     DxSheet = self.cheb.Dx/xg
     DxShelf = self.cheb.Dx/(xc-xg)
-    Dx = numpy.zeros((2*Nx,2*Nx))
-    Dx[0:Nx,0:Nx] = DxSheet
-    Dx[Nx:2*Nx,Nx:2*Nx] = DxShelf
+    #Dx = numpy.zeros((2*Nx,2*Nx))
+    #Dx[0:Nx,0:Nx] = DxSheet
+    #Dx[Nx:2*Nx,Nx:2*Nx] = DxShelf
   
     p = self.p
     Kappa = self.Kappa
@@ -380,7 +418,7 @@ class SheetShelfSolver:
     drivingCoeff1 = numpy.zeros(x.shape)
     drivingCoeff2 = numpy.zeros(x.shape)
     drivingCoeff1[0:Nx] = -H[0:Nx]
-    drivingCoeff2[0:Nx] = -H[0:Nx]*bx[0:Nx]
+    drivingCoeff2[0:Nx] = H[0:Nx]*bx[0:Nx]
     drivingCoeff1[Nx:2*Nx] = -delta*H[Nx:2*Nx]
     
     u = a*x/H
@@ -425,51 +463,96 @@ class SheetShelfSolver:
     
     # tau_d = -H sx
     
-    Dxx = numpy.dot(Dx,Dx)
+#    Dxx = numpy.dot(Dx,Dx)
+#    
+#    M = numpy.dot(numpy.diag(longiCoeff2 + drivingCoeff1),Dx) \
+#      + numpy.dot(numpy.diag(longiCoeff3),Dxx) \
+#      + numpy.diag(lateralCoeff)
+#    rhs = -longiCoeff1 - basal - drivingCoeff2
+#    
+#    # Hx = bx at the ice divide
+#    M[0,:] = 0
+#    M[0,0:Nx] = DxSheet[0,:]
+#    rhs[0] =  bx[0]
+#    
+#    # H = Hf at the grounding line
+#    M[Nx-1,:] = 0.
+#    M[Nx-1,Nx-1] = 1.
+#    rhs[Nx-1] = Hf[Nx-1]
+#    M[Nx,:] = 0.
+#    M[Nx,Nx] = 1.
+#    rhs[Nx] = Hf[Nx-1]
+#    
+#    # Hx is continuous at the grounding line
+#    M[2*Nx-1,0:Nx] = DxSheet[Nx-1,:]
+#    M[2*Nx-1,Nx:2*Nx] = -DxShelf[0,:]
+#    rhs[2*Nx-1] = 0.
+#    
+#    
+#    newH = linalg.solve(M,rhs)
     
-    M = numpy.dot(numpy.diag(longiCoeff2 + drivingCoeff1),Dx) \
-      + numpy.dot(numpy.diag(longiCoeff3),Dxx) \
-      + numpy.diag(lateralCoeff)
-    rhs = -longiCoeff1 - basal - drivingCoeff2
+    M = numpy.dot(numpy.diag(longiCoeff2[0:Nx] - H[0:Nx]),DxSheet) \
+      + numpy.dot(numpy.diag(longiCoeff3[0:Nx]),numpy.dot(DxSheet,DxSheet)) \
+      + numpy.diag(lateralCoeff[0:Nx])
+    rhs = -longiCoeff1[0:Nx] - basal[0:Nx] - H[0:Nx]*bx[0:Nx]
     
     # Hx = bx at the ice divide
     M[0,:] = 0
-    M[0,0:Nx] = DxSheet[0,:]
+    M[0,:] = DxSheet[0,:]
     rhs[0] =  bx[0]
     
     # H = Hf at the grounding line
-    M[Nx-1,:] = 0.
-    M[Nx-1,Nx-1] = 1.
-    rhs[Nx-1] = Hf[Nx-1]
-    M[Nx,:] = 0.
-    M[Nx,Nx] = 1.
-    rhs[Nx] = Hf[Nx-1]
-    
-    # Hx is continuous at the grounding line
-    M[2*Nx-1,0:Nx] = DxSheet[Nx-1,:]
-    M[2*Nx-1,Nx:2*Nx] = -DxShelf[0,:]
-    rhs[2*Nx-1] = 0.
+    M[-1,:] = 0.
+    M[-1,-1] = 1.
+    rhs[-1] = Hf[Nx-1]
     
     
-    newH = linalg.solve(M,rhs)
+    newH = numpy.zeros(x.shape)
+    solver_res =  numpy.zeros(x.shape)
+    residual_check =  numpy.zeros(x.shape)
     
-    solver_res = numpy.dot(M,newH) - rhs
-    residual_check = numpy.dot(M,H) - rhs
+    newH[0:Nx]  = linalg.solve(M,rhs)
+    solver_res[0:Nx] = numpy.dot(M,newH[0:Nx]) - rhs
+    residual_check[0:Nx] = numpy.dot(M,H[0:Nx]) - rhs
+
+    M = numpy.dot(numpy.diag(longiCoeff2[Nx:] - delta*H[Nx:]),DxShelf) \
+      + numpy.dot(numpy.diag(longiCoeff3[Nx:]),numpy.dot(DxShelf,DxShelf)) \
+      + numpy.diag(lateralCoeff[Nx:])
+    rhs = -longiCoeff1[Nx:]
+    
+    M[0,:] = 0.
+    M[0,0] = 1.
+    rhs[0] = Hf[-1]
+    
+    # nu[-1]*ux[-1] = 0.5*delta*H[-1]
+    # nu[-1]*(a - u[-1] Hx[-1])/H[-1] - 0.5*delta*H[-1] = 0
+    # nu[-1](a - u[-1] Hx[-1]) - 0.5*delta*H[-1]**2 = 0
+    # (nu[-1]*u[-1]*Dx + 0.5*delta*H[-1]) H = a*nu[-1]
+    M[-1,:] = nu[-1]*u[-1]*DxShelf[-1,:]
+    M[-1,-1] += 0.5*delta*H[-1]
+    rhs[-1] = a*nu[-1]
+    
+    
+    newH[Nx:] = linalg.solve(M,rhs)
+    solver_res[Nx:] = numpy.dot(M,newH[Nx:]) - rhs
+    residual_check[Nx:] = numpy.dot(M,H[Nx:]) - rhs
+    
     self.noiseFloor = numpy.maximum(numpy.max(numpy.abs(solver_res[1:Nx-1])),
                                     numpy.max(numpy.abs(solver_res[Nx+1:2*Nx-1])))
                                     
                                     
-    minScale = 0.1
-    self.HScale = 1.0
-    if(numpy.any(newH < minScale*H)):
-      print "Have to scale newH so H doesn't got through zero." 
-      self.HScale = numpy.amin(newH/H)
-      print self.HScale
-      alpha = (1.0-minScale)/(1.0-self.HScale)
-      print alpha
-      newH = alpha*newH + (1-alpha)*H
+#    minScale = 0.1
+#    self.HScale = 1.0
+#    if(numpy.any(newH < minScale*H)):
+#      print "Have to scale newH so H doesn't got through zero." 
+#      self.HScale = numpy.amin(newH/H)
+#      print self.HScale
+#      alpha = (1.0-minScale)/(1.0-self.HScale)
+#      print alpha
+#      newH = alpha*newH + (1-alpha)*H
 
     newU = a*x/newH  
+    newHx = self.derivX(newH)
     
     if(options.plot):
       import matplotlib.pyplot as plt
@@ -478,42 +561,34 @@ class SheetShelfSolver:
       newS[Nx:2*Nx] = delta*newH[Nx:2*Nx]
       if(options.plotContinuous):
         plt.ion()
-      temp = nu[-1]*ux[Nx-1]/(0.5*self.delta) - b[Nx-1]
-      fig = plt.figure(1)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
+      plt.figure(1,figsize=(16,8))
+      plt.clf()
+        
+      temp = nu[-1]*ux[-1]/0.5
+      plt.subplot(231)
       plt.plot(x,s, 'b', x, newS, 'r', x, -b, 'k', x[0:Nx], Hf-b[0:Nx], 'g',
                x, temp*numpy.ones(x.shape),'k--')
-      fig = plt.figure(2)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
+      plt.subplot(232)
       plt.plot(x,solver_res,'b', x, residual, 'r',
                x, residual_check, 'k--')
-      fig = plt.figure(3)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
-      plt.plot(x,longi, 'b', x, basal, 'r', x, driving, 'g', x, residual, 'k',
+      plt.subplot(233)
+      plt.plot(x,longi, 'b', x, basal, 'r', x, driving, 'g', 
+               x, lateral, 'm', 
+               x, residual, 'k',
                x, residual_check, 'k--')
-      fig = plt.figure(4)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
+      plt.subplot(234)
       plt.plot(x,u, 'b', x, newU, 'r', x, a*xg/Hf[Nx-1]*numpy.ones(x.shape,float),'--k')
-      fig = plt.figure(5)
-      if(len(fig.axes) > 0):
-        fig.axes[0].cla()
+      plt.subplot(235)
       plt.plot(x,ux,'b',x,a/H,'r',x,-u*Hx/H,'g')
-      if(options.plotContinuous):
-        plt.draw()
-        plt.pause(0.0001)
-      else:
-        plt.show()
-      
+      plt.subplot(236)
+      plt.plot(x[Nx:],(nu[Nx:]*newU[Nx:]*newHx[Nx:] + 0.5*delta*H[Nx:]*newH[Nx:]) - a*nu[Nx:])
 
-    self.resBC = nu[Nx-1]*ux[Nx-1] - 0.5*delta*Hf[Nx-1]
+    #self.resBC = nu[-1]*ux[-1] - 0.5*delta*H[-1]
+    self.resBC = newHx[Nx-1]-newHx[Nx]
     
     self.resStress = numpy.maximum(numpy.max(numpy.abs(residual_check[1:Nx-1])),
                                    numpy.max(numpy.abs(residual_check[Nx+1:2*Nx-1])))
-    self.H = H
+    self.H = newH
     self.u = newU
     
 from optparse import OptionParser
@@ -547,7 +622,7 @@ parser.add_option("--inFile", type="string", default="none", dest="inFile")
 parser.add_option("--folder", type="string", default="results", dest="folder")
 parser.add_option("--outFile", type="string", default="results.pyda", dest="outFile")
 
-parser.add_option("--Nx", type="int", default=513, dest="Nx")
+parser.add_option("--Nx", type="int", default=1025, dest="Nx")
 
 parser.add_option("--eps_s", type="float", default=1e-8, dest="eps_s")
 parser.add_option("--tolerance", type="float", default=1e-10, dest="tolerance")
