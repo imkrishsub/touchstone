@@ -644,6 +644,10 @@ parser.add_option("--useSchoofBasal", action="store_true", dest="useSchoofBasal"
 
 options, args = parser.parse_args()
 
+
+if not(os.path.exists(options.folder)):
+	os.mkdir(options.folder)
+
 solver = SheetShelfSolver(options)
 
 
