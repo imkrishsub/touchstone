@@ -640,7 +640,10 @@ class Solver:
     M[0,1] = self.DxH[0,1]
     M = M.asformat('csr')
     
-    rhs = a - self.meltRate*numpy.array(self.floatingMaskH,float) + self.transient*self.HPrev/self.dt - (1-self.timeCentering)*self.prevHux
+    meltRate = self.meltRate*numpy.array(self.floatingMaskH,float)
+    meltRate[self.glIndices] = self.meltRate*(1. - self.lambda_g)
+    
+    rhs = a - meltRate + self.transient*self.HPrev/self.dt - (1-self.timeCentering)*self.prevHux
     rhs[0] = 0.
       
     Hkp1 = scipy.sparse.linalg.spsolve(M,rhs)
