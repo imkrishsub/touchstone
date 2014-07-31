@@ -270,10 +270,11 @@ class Solver:
       
           self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
           self.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
+          if self.writeToSeparateFile:
+             self.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=1)[0]
           self.H = numpy.fromfile(filePointer, dtype=float, count=Nx)
           self.updateXgAndFlotationMasks()
           self.u = numpy.fromfile(filePointer, dtype=float, count=Nx)
-          self.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=-1)[0]
           filePointer.close()
         except IOError:
           print 'Could not read %s. Exiting.'%fileName
@@ -295,6 +296,9 @@ class Solver:
     xg.tofile(filePointer)
     time = numpy.array(self.time)
     time.tofile(filePointer)
+    if self.writeToSeparateFile:
+       outputFileIndex = numpy.array(self.outputFileIndex)
+       outputFileIndex.tofile(filePointer)
     self.H.tofile(filePointer)
     self.u.tofile(filePointer)
     xH = self.xH
@@ -317,8 +321,6 @@ class Solver:
     linearSlope.tofile(filePointer)
     eps_s = numpy.array(self.eps_s)
     eps_s.tofile(filePointer)
-    outputFileIndex = numpy.array(self.outputFileIndex)
-    outputFileIndex.tofile(filePointer)    
     filePointer.close()
     filePointer = open(self.filePointer,'w')
     filePointer.write("%s\n"%self.outFile)
