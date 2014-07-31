@@ -34,6 +34,7 @@ class Solver:
     self.C = options.C
     self.W = options.W
     self.a = options.a
+    self.meltRate = options.meltRate
     self.p = options.p
     self.A = options.A
     self.g = options.g # m/s^2 gravity acceleration
@@ -317,6 +318,8 @@ class Solver:
     rho_i.tofile(filePointer)
     a = numpy.array(self.a)
     a.tofile(filePointer)
+    meltRate = numpy.array(self.meltRate)
+    meltRate.tofile(filePointer)
     linearSlope = numpy.array(self.linearSlope)
     linearSlope.tofile(filePointer)
     eps_s = numpy.array(self.eps_s)
@@ -637,7 +640,7 @@ class Solver:
     M[0,1] = self.DxH[0,1]
     M = M.asformat('csr')
     
-    rhs = a + self.transient*self.HPrev/self.dt - (1-self.timeCentering)*self.prevHux
+    rhs = a - self.meltRate*numpy.array(self.floatingMaskH,float) + self.transient*self.HPrev/self.dt - (1-self.timeCentering)*self.prevHux
     rhs[0] = 0.
       
     Hkp1 = scipy.sparse.linalg.spsolve(M,rhs)
@@ -754,6 +757,7 @@ parser.add_option("--W", type="float", default=10, dest="W")
 parser.add_option("--rho_i", type="float", default=900.0, dest="rho_i") # kg/m^3 ice density
 parser.add_option("--rho_w", type="float", default=1000.0, dest="rho_w") # kg/m^3 water density
 parser.add_option("--a", type="float", default=1.0, dest="a")
+parser.add_option("--meltRate", type="float", default=0.0, dest="meltRate")
 parser.add_option("--g", type="float", default=9.8, dest="g")
 parser.add_option("--n", type="float", default=3.0, dest="n")
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
