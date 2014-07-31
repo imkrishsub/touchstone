@@ -443,7 +443,7 @@ class SheetShelfSolver:
     nux = nu*(1./n - 1)*uxx/abs_ux
     
     longiCoeff1 = nux*a
-    longiCoeff2 = -nux*u + nu*ux
+    longiCoeff2 = -(nux*u + nu*ux)
     longiCoeff3 = -nu*u
     longi = longiCoeff1 + longiCoeff2*Hx + longiCoeff3*Hxx
     
