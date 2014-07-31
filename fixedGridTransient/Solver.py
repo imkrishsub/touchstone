@@ -326,7 +326,7 @@ class Solver:
     eps_s.tofile(filePointer)
     filePointer.close()
     filePointer = open(self.filePointer,'w')
-    filePointer.write("%s\n"%self.outFile)
+    filePointer.write("%s\n"%fileName)
     filePointer.close()
     
     self.outputFileIndex +=1  
