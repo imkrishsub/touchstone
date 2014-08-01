@@ -23,12 +23,16 @@ glpDirs = [ "nonGLP", "GLP" ]
 
 # We need to start to iterate on the smallest C-value (the least advanced GL).
 Csmall = [ "1.994e6", "7.624e6"]
-
 Clarge = [ "1.994e7", "7.624e6"]
+Cschoof = "7.624e6"
+
+meltRates = ["1","10","50","100","150"]
       
 defaultTol = 5e-2
 
-commonArgs = "--folder=. --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s --maxSteps=1000000 --linearSlope=%s --lambda_0=%s --dtInit=%s --toleranceInner=%s"%(A_ref,eps_s,xgInit,m_0,Ab)
+commonArgs = "--folder=. --writeToSeparateFile --initFromCheb --fixedTimeStep --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s --maxSteps=1000000 --linearSlope=%s --lambda_0=%s --toleranceInner=%s"%(A_ref,eps_s,xgInit,m_0,Ab,slope_ref,lambda_ref,defaultTol)
+
+
 # uncomment the following to include plotting
 #commonArgs="%s --plot --plotContinuous"%(commonArgs)
 
@@ -47,126 +51,86 @@ for resIndex in range(len(dxs)):
       dx = dxs[resIndex]
       #dt = dts[resIndex]
       dtInit = dtInits[resIndex]
-      goalCFLvaryC = "%.2f"%goalCFLsvaryC[resIndex,pIndex,glpIndex]
-      goalCFLvaryslope = "%.2f"%goalCFLsvaryslope[resIndex,pIndex,glpIndex]
-      goalCFLvarylambda = "%.2f"%goalCFLsvarylambda[resIndex,pIndex,glpIndex]
-      goalCFLvaryW = "%.2f"%goalCFLsvaryW[resIndex,pIndex,glpIndex]
-      tol = "%.1e"%tols[resIndex,pIndex,glpIndex]
-      prevResult = "none"
-      print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+#      goalCFLvaryC = "%.2f"%goalCFLsvaryC[resIndex,pIndex,glpIndex]
+#      tol = "%.1e"%tols[resIndex,pIndex,glpIndex]
+
+#      prevResult = "none"
+      prevResult = "C_%s_cheby.pyda"%Cschoof
+      print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
       exptIndex += 1
-# Iteration over basal stress constant
-      for C in Cs:
-        dir = "%s/p_%.2f/vary_C/res_%s"%(glpDir,p,dx)      
-      
-        prefix = "C_%s_adv"%C
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFLvaryC,dx,Nx,xc,glpString,channelString,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-      for C in Cs[-2::-1]:
-        dir = "%s/p_%.2f/vary_C/res_%s"%(glpDir,p,dx)
-
-        prefix = "C_%s_ret"%C
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C,slope_ref,lambda_ref,dtInit,goalCFLvaryC,dx,Nx,xc,glpString,channelString,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-# Iteration over the bed slope topography
-      prevResult = "none"
-      print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
-      exptIndex += 1
-      for slope in slopes:
-        dir = "%s/p_%.2f/vary_Slope/res_%s"%(glpDir,p,dx)
-
-        prefix = "Slope_%s_adv"%slope
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFLvaryslope,dx,Nx,xc,glpString,channelString,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)      
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-      for slope in slopes[-2::-1]:
-        dir = "%s/p_%.2f/vary_Slope/res_%s"%(glpDir,p,dx)
-
-        prefix = "Slope_%s_ret"%slope
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope,lambda_ref,dtInit,goalCFLvaryslope,dx,Nx,xc,glpString,channelString,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-# Iteration over wavelength
-      prevResult = "none"
-      print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
-      exptIndex += 1
-      for Lambda in lambdas:
-        dir = "%s/p_%.2f/vary_lambda_0/res_%s"%(glpDir,p,dx)
-
-        prefix = "lambda_0_%s_adv"%Lambda
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFLvarylambda,dx,Nx,xc,glpString,channelString,tol)     
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-      for Lambda in lambdas[-2::-1]:
-        dir = "%s/p_%.2f/vary_lambda_0/res_%s"%(glpDir,p,dx)
-
-        prefix = "lambda_0_%s_ret"%Lambda
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --toleranceInner=%s" \
-          %(commonArgs,p,C_ref,slope_ref,Lambda,dtInit,goalCFLvarylambda,dx,Nx,xc,glpString,channelString,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
-
-# Iteration over channel width
-      xgInitW = 0.9
-      commonArgsW = "--folder=. --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s"%(A_ref,eps_s,xgInitW,m_0,Ab)
-      channelString = "--useChannel" #channelStrings[1]
-      #channelDir = channelDirs[1]
-      prevResult = "none"
-      print "SENSITIVITY expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
-      exptIndex += 1
-      for W in Ws:
-        dir = "%s/p_%.2f/vary_W/res_%s"%(glpDir,p,dx)
-
-        prefix = "W_%s_adv"%W
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --W=%s --toleranceInner=%s" \
-          %(commonArgsW,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFLvaryW,dx,Nx,xc,glpString,channelString,W,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix     
-      
-      for W in Ws[-2::-1]:
-        dir = "%s/p_%.2f/vary_W/res_%s"%(glpDir,p,dx)
-
-        prefix = "W_%s_ret"%W
-        args = "%s --maxSteps=1000000 --p=%.2f --C=%s --linearSlope=%s --lambda_0=%s --dtInit=%s --goalCFL=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s --W=%s --toleranceInner=%s" \
-          %(commonArgsW,p,C_ref,slope_ref,lambda_ref,dtInit,goalCFLvaryW,dx,Nx,xc,glpString,channelString,W,tol)
-        filePointer.write("%s\n"%dir)
-        filePointer.write("%s\n"%prefix)
-        filePointer.write("%s\n"%prevResult)
-        filePointer.write("%s\n"%args)
-        prevResult="%s_final.pyda"%prefix
      
+      dir = "%s/p_%.2f/transient_C/res_%s"%(glpDir,p,dx)      
+      C = Clarge[0]
+      prefix = "C_%s_adv"%C
+      args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,glpString,channelString)
+      filePointer.write("%s\n"%dir)
+      filePointer.write("%s\n"%prefix)
+      filePointer.write("%s\n"%prevResult)
+      filePointer.write("%s\n"%args)
+      prevResult="%s_final.pyda"%prefix
+
+
+      prevResult = "C_%s_cheby.pyda"%Csmall[0]
+      print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+      exptIndex += 1
+
+      dir = "%s/p_%.2f/transient_C/res_%s"%(glpDir,p,dx)
+      C = Cschoof
+      prefix = "C_%s_adv"%C
+      args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,glpString,channelString)
+      filePointer.write("%s\n"%dir)
+      filePointer.write("%s\n"%prefix)
+      filePointer.write("%s\n"%prevResult)
+      filePointer.write("%s\n"%args)
+      prevResult="%s_final.pyda"%prefix
+
+
+      prevResult = "C_%s_cheby.pyda"%Clarge[0]
+      print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+      exptIndex += 1
+
+      dir = "%s/p_%.2f/transient_C/res_%s"%(glpDir,p,dx)
+      C = Cschoof
+      prefix = "C_%s_ret"%C
+      args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,glpString,channelString)
+      filePointer.write("%s\n"%dir)
+      filePointer.write("%s\n"%prefix)
+      filePointer.write("%s\n"%prevResult)
+      filePointer.write("%s\n"%args)
+      prevResult="%s_final.pyda"%prefix
+
+
+      prevResult = "C_%s_cheby.pyda"%Cschoof
+      print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+      exptIndex += 1
+
+      dir = "%s/p_%.2f/transient_C/res_%s"%(glpDir,p,dx)
+      C = Csmall[0]
+      prefix = "C_%s_ret"%C
+      args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,glpString,channelString) 
+      filePointer.write("%s\n"%dir)
+      filePointer.write("%s\n"%prefix)
+      filePointer.write("%s\n"%prevResult)
+      filePointer.write("%s\n"%args)
+      prevResult="%s_final.pyda"%prefix
+
+
+###################################################
+      for meltRate in meltRates:
+# Iteration over meltrates
+        prevResult = "C_%s_cheby.pyda"%Cschoof
+        print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
+        exptIndex += 1
+
+        dir = "%s/p_%.2f/transient_meltRate/res_%s"%(glpDir,p,dx)
+
+        prefix = "meltRate_%s"%meltRate
+        args = "%s --p=%.2f --C=%s --dtInit=%s --meltRate=%s --deltaX=%se-3 --Nx=%s --xc=%s %s %s"%(commonArgs,p,C_ref,dtInit,meltRate,dx,Nx,xc,glpString,channelString)
+        filePointer.write("%s\n"%dir)
+        filePointer.write("%s\n"%prefix)
+        filePointer.write("%s\n"%prevResult)
+        filePointer.write("%s\n"%args)
+        prevResult="%s_final.pyda"%prefix
+
 
 
