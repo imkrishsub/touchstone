@@ -61,6 +61,8 @@ def readResults(fileName, solver):
   
   solver.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
   solver.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
+  if solver.writeToSeparateFile:
+     solver.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=1)[0]  
   solver.H = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
   solver.updateH(solver.H,solver.xg)
   solver.u = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
@@ -69,8 +71,14 @@ def readResults(fileName, solver):
   solver.ux[Nx:2*Nx] = numpy.dot(solver.cheb.Dx/(solver.xc-solver.xg),solver.u[Nx:2*Nx])
   filePointer.close()
 
+  
 
 def writeResults(fileName, solver):
+  if solver.writeToSeparateFile:
+      fileName = "%s/%s.%04i"%(solver.folder,solver.outFile,solver.outputFileIndex)
+  else:
+      fileName = "%s/%s"%(solver.folder,solver.outFile)
+
   print "writing to: ", fileName
   filePointer = open(fileName,'wb')
   Nx = numpy.array(solver.Nx,int)
@@ -79,6 +87,9 @@ def writeResults(fileName, solver):
   xg.tofile(filePointer)
   time = numpy.array(solver.time)
   time.tofile(filePointer)
+  if solver.writeToSeperateFile:
+     outputFileIndex = numpy.array(solver.outputFileIndex)
+     outputFileIndex.tofile(filePointer)
   solver.H.tofile(filePointer)
   solver.u.tofile(filePointer)
   xSheet = solver.xg*solver.cheb.x
@@ -99,6 +110,8 @@ def writeResults(fileName, solver):
   rho_i.tofile(filePointer)
   a = numpy.array(solver.a)
   a.tofile(filePointer)
+  meltRate = numpy.array(self.meltRate)
+  meltRate.tofile(filePointer)
   linearSlope = numpy.array(solver.linearSlope)
   linearSlope.tofile(filePointer)
   eps_s = numpy.array(solver.eps_s)
@@ -110,6 +123,7 @@ def writeResults(fileName, solver):
   filePointer.write("%s\n"%options.outFile)
   filePointer.close()
 
+  solver.outputFileIndex +=1
 
 parser = OptionParser()
 
@@ -123,6 +137,7 @@ parser.add_option("--A", type="float", default=1e-25, dest="A")
 parser.add_option("--C", type="float", default=7.624e6, dest="C")
 parser.add_option("--rho_i", type="float", default=900.0, dest="rho_i")
 parser.add_option("--a", type="float", default=1.0, dest="a")
+parser.add_option("--meltRate", type="float", default=0.0, dest="meltRate")
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
 parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
 parser.add_option("--poly", action="store_true", dest="poly")
@@ -137,6 +152,11 @@ parser.add_option("--maxSteps", type="int", default=1000, dest="maxSteps")
 parser.add_option("--maxInnerSteps", type="int", default=200, dest="maxInnerSteps")
 parser.add_option("--maxInitSteps", type="int", default=200, dest="maxInitSteps")
 parser.add_option("--stepsPerWrite", type="int", default=10, dest="stepsPerWrite")
+parser.add_option("--timeCentering", type="float", default=1.0, dest="timeCentering")
+parser.add_option("--transient", action="store_true", default=False, dest="transient")
+parser.add_option("--writeToSeperateFile", action="store_true", default=False, dest="writeToSeperateFile")
+parser.add_option("--finalTime", type="float", default=500, dest="finalTime")
+parser.add_option("--fixedTimeStep", action="store_true", default=False, dest="fixedTimeStep")
 
 parser.add_option("--goalCFL", type="float", default=2.0, dest="goalCFL")
 parser.add_option("--eps_s", type="float", default=1e-8, dest="eps_s")
@@ -191,6 +211,10 @@ solver.rho_i = options.rho_i
 solver.a = options.a
 solver.linearSlope = options.linearSlope
 solver.lambda_0 = options.lambda_0
+solver.fixedTimeStep = options.fixedTimeStep
+#solver.stepsPerWrite = options.stepsPerWrite
+solver.writeToSeperateFile = options.writeToSeperateFile
+solver.finalTime = options.finalTime
 
 solver.computeNondimConstants()
 
@@ -213,6 +237,9 @@ if(solver.plot):
 
 if(solver.plot and solver.plotContinuous):
   plt.ion()
+
+solver.time = 0
+solver.outputFileIndex = 0
 
 if(options.inFile == "none" or options.inFile == "zero"):
   solver.time = 0
@@ -403,12 +430,17 @@ for outer in range(maxSteps):
   maxChange = max(diffH/numpy.amax(newH),diffXg/newXg)
   toleranceInner = min(maxToleranceInner,solver.dt*goalCFL/cfl*maxChange)
 
-  scale = max(0.5,min(2.0,goalCFL/cfl))
-  solver.dt *= scale
+  if not solver.fixedTimeStep
+      scale = max(0.5,min(2.0,goalCFL/cfl))
+      solver.dt *= scale
 
   print "time: ", solver.time, "|dH_dt|_max: ", diffH, "dxg_dt:", dxg_dt, "dt: ", solver.dt, "inner tol.:", toleranceInner
   solver.updateH(newH,newXg)
-  
+ 
+  if solver.time>=solver.finalTime/solver.tBar*solver.sPerY:
+    print "The run exceeded the transient final time."
+    break
+ 
   if(numpy.mod(outer,stepsPerWrite) == stepsPerWrite-1):
     writeResults(outFile, solver)
   

@@ -8,7 +8,7 @@ import numpy.linalg
 import os.path
 #import matplotlib.pyplot as plt
 
-from scipy.interpolate import interp1d
+#from scipy.interpolate import interp1d
 from optparse import OptionParser
 
 #from pprint import pprint
@@ -45,6 +45,7 @@ class Solver:
     self.finalTime = options.finalTime
     self.transient = options.transient
     self.fixedTimeStep = options.fixedTimeStep
+    self.timeCentering = options.timeCentering
 
     self.Ab = options.Ab
     self.lambda_0 = options.lambda_0 # wavelength of bedrock bump (m)
@@ -148,7 +149,7 @@ class Solver:
         exit(1)
       self.readResults(options.inFile)
       
-    self.writeResult()  
+    self.writeResults()  
 
   def makeInitialCondition(self, inFile, xgInit, maxInitSteps, initUTolerance):
     self.time = 0
@@ -246,16 +247,24 @@ class Solver:
         try:
           filePointer = open(fileName,'rb')
           Ncheb = numpy.fromfile(filePointer, dtype=int, count=1)[0]       
-          self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
+	  self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
           time_cheb = numpy.fromfile(filePointer, dtype=float, count=1)[0]
           Hcheb = numpy.fromfile(filePointer, dtype=float, count=2*Ncheb)
           ucheb = numpy.fromfile(filePointer, dtype=float, count=2*Ncheb)
           xcheb = numpy.fromfile(filePointer, dtype=float, count=2*Ncheb)
-          filePointer.close()    
-          fH = interp1d(xcheb, Hcheb)
-          fu = interp1d(xcheb, ucheb)
-          self.H = fH(self.xH)
-          self.u = fu(self.xu)
+          filePointer.close()
+	  self.H = numpy.interp(self.xH,xcheb,Hcheb)
+	  self.H[0] = self.H[1]    
+	  self.u = numpy.interp(self.xu,xcheb,ucheb)
+#          fH = interp1d(xcheb, Hcheb)
+#          fu = interp1d(xcheb, ucheb)
+#	  Htemp = fH(self.xH[1:])
+#	  H0 = numpy.array([Htemp[0]])
+#	  self.H = numpy.concatenate((H0,Htemp),axis=0)
+#          self.u = fu(self.xu)
+
+          self.time = 0
+	  self.outputFileIndex = 0
 
         except IOError:
           print 'Could not read %s. Exiting.'%fileName
@@ -690,7 +699,7 @@ class Solver:
       self.uPrev = self.u
       self.HPrev = self.H
       self.xgPrev = self.xg
-      self.PrevHux = self.Dxu.dot(self.HPrev*self.uPrev)
+      self.prevHux = self.Dxu.dot(self.HPrev*self.uPrev)
   
       self.step(outer)
   
@@ -725,7 +734,7 @@ class Solver:
         converged = True
         break
     
-      if self.time>self.finalTime/self.tBar*self.sPerY:
+      if self.time>=self.finalTime/self.tBar*self.sPerY:
         print "The run exceeded the transient final time."
         break
 
@@ -778,7 +787,7 @@ parser.add_option("--folder", type="string", default="results", dest="folder")
 parser.add_option("--outFile", type="string", default="results.pyda", dest="outFile")
 parser.add_option("--filePointer", type="string", default="default.pointer", dest="filePointer")
 
-parser.add_option("--Nx", type="int", default=661, dest="Nx")
+parser.add_option("--Nx", type="int", default=1321, dest="Nx")
 parser.add_option("--xc", type="float", default=2.112, dest="xc")
 parser.add_option("--deltaX", type="float", default=1.6e-3, dest="deltaX") # m
 parser.add_option("--maxSteps", type="int", default=20000, dest="maxSteps")
@@ -821,6 +830,6 @@ if(maxSteps == 0):
   exit()
 
 
-stepsPerWrite = solver.TransientstepsPerWrite
+#stepsPerWrite = solver.TransientstepsPerWrite
 
 solver.runTimeStepping(maxSteps,stepsPerWrite)
