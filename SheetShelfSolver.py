@@ -15,6 +15,7 @@ class SheetShelfSolver:
     self.rho_w = 1000.0 # kg/m^3 water density
     self.C = 7.624e6
     self.a = 1.0
+    self.meltRate = options.meltRate
     self.plotContinuous = True
     self.plot = True
     self.useLongi = True
@@ -22,6 +23,12 @@ class SheetShelfSolver:
     self.Ab = 3.1688e-24 #Pa^-3 s^-1
     self.A = 1e-25 #Pa^-3 s^-1, a typical value
     
+    self.writeToSeperateFile = options.writeToSeperateFile
+    self.finalTime = options.finalTime
+    self.transient = options.transient
+    self.fixedTimeStep = options.fixedTimeStep
+    self.timeCentering = options.timeCentering
+       
     self.p = 0.0
     
     sPerY = 365.25*24.*3600. # number of seconds per year
@@ -108,7 +115,6 @@ class SheetShelfSolver:
   def maxS(self,x):
     return 0.5*(self.absS(x)+x)
     
-  def maxSx(self,x):
     return 0.5*(self.absSx(x) + 1.0)
     
   def newtonStepXg(self, newH):
@@ -149,10 +155,13 @@ class SheetShelfSolver:
     diag1 = 1./self.dt  + self.ux
     if(self.useChannelWidth):
       diag1 += (self.u + movingGridTerm)*self.Wx/self.W
+    
+    meltRate = numpy.zeros(x.shape)
+    meltRate[Nx:2*Nx] = self.meltRate
 
     # dH/dt (u - sigma dxg_dt) Hx + ux H + (u - sigma dxg_dt) H Wx/W = a (in sheet)
     M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
-    rhs = self.a + self.oldH/self.dt
+    rhs = self.a - meltRate + self.oldH/self.dt
     
 #    # have to replace a row to get continuity in H at xg
 #    M[Nx,:] = 0.
@@ -236,6 +245,7 @@ class SheetShelfSolver:
     tauBk = tauBCoeff*uk
     tauWk = tauWCoeff*uk
     
+    residual = tauLk + tauBk + tauD + tauWk
     residual = tauLk + tauBk + tauD + tauWk
     
     M = numpy.dot(Dx,numpy.dot(numpy.diag(tauLCoeff),Dx)) + numpy.diag(tauBCoeff + tauWCoeff)

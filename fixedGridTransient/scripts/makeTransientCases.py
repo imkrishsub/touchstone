@@ -11,6 +11,8 @@ eps_s = "1e-10"
 m_0 = "0.5"
 A_ref = "2.1544e-25"
 Ab = "3.1688e-24"
+theta = "0.5"
+
 
 dxs = [ "3.2", "1.6", "0.8", "0.4", "0.2", "0.1", "0.05" ]
 Nxs = [ "661", "1321", "2641", "5281", "10561", "21121", "42241" ]
@@ -33,7 +35,7 @@ meltRates = ["1","10","50","100","150"]
       
 defaultTol = 5e-2
 
-commonArgs = "--writeToSeparateFile --initFromCheb --fixedTimeStep --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s --maxSteps=1000000 --linearSlope=%s --lambda_0=%s --toleranceInner=%s"%(A_ref,eps_s,xgInit,m_0,Ab,slope_ref,lambda_ref,defaultTol)
+commonArgs = "--transient --writeToSeparateFile --initFromCheb --fixedTimeStep --A=%s --eps_s=%s --xgInit=%s --m_0=%s --Ab=%s --maxSteps=1000000 --linearSlope=%s --lambda_0=%s --timeCentering=%s --toleranceInner=%s"%(A_ref,eps_s,xgInit,m_0,Ab,slope_ref,lambda_ref,theta,defaultTol)
 
 
 # uncomment the following to include plotting
@@ -54,13 +56,14 @@ for resIndex in range(len(dxs)):
       for Cindex in range(len(Cs)):
         C = Cs[Cindex]
         suffix = Csuffix[Cindex]
-        prevResult = "C_%s_cheby.pyda"%Ccheb[Cindex]
+#        prevResult = "C_%s_cheby.pyda"%Ccheb[Cindex]
+        prevResult = "../../../../InitialConditionCheby/p_%.2f_C_%s_cheby.pyda"%(p,Ccheb[Cindex])
         print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
         exptIndex += 1
      
         prefix = "C_%s_%s"%(C,suffix)
         dir = "%s/p_%.2f/%s/res_%s"%(glpDir,p,prefix,dx)      
-        args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,glpString)
+        args = "%s --p=%.2f --C=%s --dtInit=%s --deltaX=%se-3 --Nx=%s --xc=%s --stepsPerWrite=%s %s"%(commonArgs,p,C,dtInit,dx,Nx,xc,stepsPerWrite[resIndex],glpString)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
@@ -69,14 +72,15 @@ for resIndex in range(len(dxs)):
 ###################################################
       for meltRate in meltRates:
 # Iteration over meltrates
-        prevResult = "C_%s_cheby.pyda"%Cschoof
+#        prevResult = "C_%s_cheby.pyda"%Cschoof
+        prevResult = "../../../../InitialConditionCheby/p_%.2f_C_%s_cheby.pyda"%(p,Ccheb[Cindex])
         print "TRANSIENT expt %i: %6s, p=%.2f, res=%s"%(exptIndex,glpDir,p,dx)
         exptIndex += 1
 
         prefix = "meltRate_%s"%meltRate
         dir = "%s/p_%.2f/%s/res_%s"%(glpDir,p,prefix,dx)
 
-        args = "%s --p=%.2f --C=%s --dtInit=%s --meltRate=%s --deltaX=%se-3 --Nx=%s --xc=%s %s"%(commonArgs,p,C_ref,dtInit,meltRate,dx,Nx,xc,glpString)
+        args = "%s --p=%.2f --C=%s --dtInit=%s --meltRate=%s --deltaX=%se-3 --Nx=%s --xc=%s --stepsPerWrite=%s %s"%(commonArgs,p,C_ref,dtInit,meltRate,dx,Nx,xc,stepsPerWrite[resIndex],glpString)
         filePointer.write("%s\n"%dir)
         filePointer.write("%s\n"%prefix)
         filePointer.write("%s\n"%prevResult)
