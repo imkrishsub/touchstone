@@ -15,7 +15,7 @@ class SheetShelfSolver:
     self.rho_w = 1000.0 # kg/m^3 water density
     self.C = 7.624e6
     self.a = 1.0
-    self.meltRate = options.meltRate
+#    self.meltRate = options.meltRate
     self.plotContinuous = True
     self.plot = True
     self.useLongi = True
@@ -23,23 +23,24 @@ class SheetShelfSolver:
     self.Ab = 3.1688e-24 #Pa^-3 s^-1
     self.A = 1e-25 #Pa^-3 s^-1, a typical value
     
-    self.writeToSeperateFile = options.writeToSeperateFile
-    self.finalTime = options.finalTime
-    self.transient = options.transient
-    self.fixedTimeStep = options.fixedTimeStep
-    self.timeCentering = options.timeCentering
+#    self.writeToSeperateFile = options.writeToSeperateFile
+#    self.finalTime = options.finalTime
+#    self.transient = options.transient
+#    self.fixedTimeStep = options.fixedTimeStep
+#    self.timeCentering = options.timeCentering
        
     self.p = 0.0
     
-    sPerY = 365.25*24.*3600. # number of seconds per year
+    self.sPerY = 365.25*24.*3600. # number of seconds per year
     self.g = 9.8 # m/s^2 gravity acceleration
-    self.aBar = .3/sPerY # m.s-1 accumulation rate
+    self.aBar = .3/self.sPerY # m.s-1 accumulation rate
     self.HBar = 1000. # m height scaling factor
     self.xBar = 1000000. # m domain scaling factor
     self.uBar = self.aBar*self.xBar/self.HBar # m/s ice velocity scaling factor
     self.n = 3. # Glen's flow parameter
     self.WBar = 10000. # m width scaling factor
-
+    self.tBar = self.xBar/self.uBar
+    
     self.lambda_0 = 2   # wavelength of bedrock bump (m)
     self.m_0  = .5  # maximum bed obstacle slope (no unit)
     

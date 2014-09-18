@@ -5,60 +5,52 @@ import os
 import subprocess 
 
 parser = OptionParser()
-parser.add_option("--inFile", type="string", default="none", dest="inFile")
 options, args = parser.parse_args()
 
 caseFile = args[0]
 caseIndex = int(args[1])
-inputFile = options.inFile
+
+lineIndex = 4*caseIndex
+#lineIndex = int(args[2])
 
 print 'caseFile=', caseFile 
 
 caseList = [line.rstrip('\n') for line in open(caseFile)]
 
-lineIndex=3*caseIndex
 dir=caseList[lineIndex]
 prefix=caseList[lineIndex+1]
-commonArgs=caseList[lineIndex+2].split()
+inputFile=caseList[lineIndex+2]
+commonArgs=caseList[lineIndex+3].split()
 
 print "running case: %s/%s"%(dir,prefix)
-if (inputFile != "none"):
- print "reading input from", inputFile
+print "reading input from", inputFile
 
 if(not os.path.exists(dir)):
   os.makedirs(dir)
+
+oldPath = os.getcwd()
+
 os.chdir(dir)
 
-#subprocess.call(["which", "python"])
-#subprocess.call(["whereis", "python"])
-#subprocess.call(["ls", "../../code"])
-
-#testArgs="--version"
-#print "testing python", testArgs
-#subprocess.call(["python", testArgs])
-#exit()
-
-#'''
-initFile="%s_init"%prefix
-looseFile="%s_loose"%prefix
-strictFile="%s_strict"%prefix
-finalFile="%s_final"%prefix
 filePointer="%s.pointer"%prefix
 
-looseTolerance='1e-3'
-strictTolerance='1e-6'
-
-commonArgs = ["python", "../../code/mainSheetShelf.py"] \
+commonArgs = ["python", "%s/code/mainSheetShelf.py"%oldPath] \
   + commonArgs \
-  + ["--filePointer=%s"%filePointer, "--xc=2.112"]
+  + ["--folder=.", "--filePointer=%s"%filePointer]
 
 restartFile="none"
 if os.path.exists(filePointer):
   lines = [line.rstrip('\n') for line in open(filePointer)]
-  restartFile = lines[0]
-else:
+  if len(lines) > 0 and os.path.exists(lines[0]) and (os.stat(lines[0]).st_size > 0):
+    restartFile=lines[0]
+    print "restarting from", restartFile
+if(restartFile == "none"):
   if os.path.exists(inputFile):
+    print "starting from input file", inputFile
     restartFile=inputFile
+#  else:
+#    print "exiting: input file", inputFile, "not found."
+#    exit(1)
   elif (inputFile != "none"):
     print "exiting: input file", inputFile, "not found."
     exit(1)
@@ -66,60 +58,19 @@ else:
 
 if (restartFile == "none"):
   print "init"
-  logFile = open("%s.log"%initFile,'w')
-  errFile = open("%s.err"%initFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%initFile, "--eps_s=1e-3", 
-    "--maxStep=0", "--maxToleranceInner=1e-3"]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "init failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%initFile
 else:
   print "restarting from file:", restartFile
 
-if (restartFile != "%s.pyda"%strictFile) and ( restartFile != "%s.pyda"%finalFile): 
-  print "loose from", restartFile
-  logFile = open("%s.log"%looseFile,'w')
-  errFile = open("%s.err"%looseFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%looseFile, "--eps_s=1e-3", 
-    "--maxStep=100000", "--maxToleranceInner=1e-3", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%looseTolerance, "--toleranceXg=%s"%looseTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "loose failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%looseFile
 
-if (restartFile == "%s.pyda"%looseFile) or (restartFile == "%s.pyda"%strictFile): 
-  print "strict from", restartFile
-  logFile = open("%s.log"%strictFile,'w')
-  errFile = open("%s.err"%strictFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%strictFile, "--eps_s=1e-8", 
-    "--maxStep=100000", "--maxToleranceInner=1e-5", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "strict failed! Exiting."
-    exit(status)
-  restartFile="%s.pyda"%strictFile
+logFile = open("%s.log"%prefix,'w')
+errFile = open("%s.err"%prefix,'w')
+args = commonArgs + ["--outFile=%s.pyda"%prefix, "--inFile=%s"%restartFile]
+status = subprocess.call(args, stdout=logFile, stderr=errFile)
+logFile.close()
+errFile.close()
+if status == 40:
+  print "failed to read input file. Try modifying the file pointer to restart from an earlier time step."
 
-if (restartFile == "%s.pyda"%strictFile):
-  print "final from", restartFile
-  logFile = open("%s.log"%finalFile,'w')
-  errFile = open("%s.err"%finalFile,'w')
-  args = commonArgs + ["--outFile=%s.pyda"%finalFile, "--eps_s=1e-8", 
-    "--maxStep=1000", "--maxToleranceInner=1e-6", "--inFile=%s"%restartFile, 
-    "--toleranceH=%s"%strictTolerance, "--toleranceXg=%s"%strictTolerance]
-  status = subprocess.call(args, stdout=logFile, stderr=errFile)
-  logFile.close()
-  errFile.close()
-  if status != 0:
-    print "final failed! Exiting."
-    exit(status)
+if status != 0:
+  print "run failed! Exiting."
+  exit(status)
