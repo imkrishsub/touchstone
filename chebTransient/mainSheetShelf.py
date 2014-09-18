@@ -6,7 +6,7 @@ from optparse import OptionParser
 from pprint import pprint
 
 import os.path
-
+import string
 from initH import initH
 
 def computeWLinear(x,solver):
@@ -61,8 +61,8 @@ def readResults(fileName, solver):
   
   solver.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
   solver.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
-  if solver.writeToSeparateFile:
-     solver.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=1)[0]  
+#  if solver.writeToSeparateFile:
+#     solver.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=1)[0]  
   solver.H = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
   solver.updateH(solver.H,solver.xg)
   solver.u = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
@@ -71,23 +71,27 @@ def readResults(fileName, solver):
   solver.ux[Nx:2*Nx] = numpy.dot(solver.cheb.Dx/(solver.xc-solver.xg),solver.u[Nx:2*Nx])
   filePointer.close()
 
-  
+  writeResults(outFile, solver) 
 
-def writeResults(fileName, solver):
+
+def writeResults(outFile, solver):
   if solver.writeToSeparateFile:
-      fileName = "%s/%s.%04i"%(solver.folder,solver.outFile,solver.outputFileIndex)
+#      fileName = "%s.%04i"%(solver.outFile,solver.outputFileIndex)
+      parts = string.rsplit(solver.outFile,'.',1)
+      fileName = "%s.%04i.%s"%(parts[0],solver.outputFileIndex,parts[1])
   else:
-      fileName = "%s/%s"%(solver.folder,solver.outFile)
+      fileName = "%s"%(solver.outFile)
 
   print "writing to: ", fileName
-  filePointer = open(fileName,'wb')
+#  filePointer = open(fileName,'wb')
+  filePointer = open("%s/%s"%(options.folder,fileName),'wb')
   Nx = numpy.array(solver.Nx,int)
   Nx.tofile(filePointer)
   xg = numpy.array(solver.xg)
   xg.tofile(filePointer)
   time = numpy.array(solver.time)
   time.tofile(filePointer)
-  if solver.writeToSeperateFile:
+  if solver.writeToSeparateFile:
      outputFileIndex = numpy.array(solver.outputFileIndex)
      outputFileIndex.tofile(filePointer)
   solver.H.tofile(filePointer)
@@ -110,7 +114,7 @@ def writeResults(fileName, solver):
   rho_i.tofile(filePointer)
   a = numpy.array(solver.a)
   a.tofile(filePointer)
-  meltRate = numpy.array(self.meltRate)
+  meltRate = numpy.array(solver.meltRate)
   meltRate.tofile(filePointer)
   linearSlope = numpy.array(solver.linearSlope)
   linearSlope.tofile(filePointer)
@@ -120,7 +124,8 @@ def writeResults(fileName, solver):
   xc.tofile(filePointer)
   filePointer.close()
   filePointer = open("%s/%s"%(options.folder,options.filePointer),'w')
-  filePointer.write("%s\n"%options.outFile)
+#  filePointer.write("%s\n"%options.outFile)
+  filePointer.write("%s\n"%(fileName))
   filePointer.close()
 
   solver.outputFileIndex +=1
@@ -134,12 +139,14 @@ parser.add_option("--Wx", type="float", default=0.0, dest="Wx")
 
 parser.add_option("--p", type="float", default=0.0, dest="p")
 parser.add_option("--A", type="float", default=1e-25, dest="A")
+parser.add_option("--Ab", type="float", default=3.1688e-24, dest="Ab")
 parser.add_option("--C", type="float", default=7.624e6, dest="C")
 parser.add_option("--rho_i", type="float", default=900.0, dest="rho_i")
 parser.add_option("--a", type="float", default=1.0, dest="a")
 parser.add_option("--meltRate", type="float", default=0.0, dest="meltRate")
 parser.add_option("--linearSlope", type="float", default=778.5, dest="linearSlope") #drop in m per 750 km, as in Schoof 2007
 parser.add_option("--lambda_0", type="float", default=2, dest="lambda_0")
+parser.add_option("--m_0", type="float", default=0.5, dest="m_0")
 parser.add_option("--poly", action="store_true", dest="poly")
 
 parser.add_option("--inFile", type="string", default="none", dest="inFile")
@@ -154,7 +161,7 @@ parser.add_option("--maxInitSteps", type="int", default=200, dest="maxInitSteps"
 parser.add_option("--stepsPerWrite", type="int", default=10, dest="stepsPerWrite")
 parser.add_option("--timeCentering", type="float", default=1.0, dest="timeCentering")
 parser.add_option("--transient", action="store_true", default=False, dest="transient")
-parser.add_option("--writeToSeperateFile", action="store_true", default=False, dest="writeToSeperateFile")
+parser.add_option("--writeToSeparateFile", action="store_true", default=False, dest="writeToSeparateFile")
 parser.add_option("--finalTime", type="float", default=500, dest="finalTime")
 parser.add_option("--fixedTimeStep", action="store_true", default=False, dest="fixedTimeStep")
 
@@ -206,15 +213,21 @@ solver.useChannelWidth = options.useChannelWidth
 solver.eps_s = eps_s
 solver.p = options.p
 solver.A = options.A
+solver.Ab = options.Ab
 solver.C = options.C
 solver.rho_i = options.rho_i
 solver.a = options.a
 solver.linearSlope = options.linearSlope
 solver.lambda_0 = options.lambda_0
+solver.m_0 = options.m_0
 solver.fixedTimeStep = options.fixedTimeStep
 #solver.stepsPerWrite = options.stepsPerWrite
-solver.writeToSeperateFile = options.writeToSeperateFile
+solver.writeToSeparateFile = options.writeToSeparateFile
 solver.finalTime = options.finalTime
+solver.meltRate = options.meltRate
+
+solver.folder = options.folder
+solver.outFile = options.outFile
 
 solver.computeNondimConstants()
 
@@ -430,7 +443,7 @@ for outer in range(maxSteps):
   maxChange = max(diffH/numpy.amax(newH),diffXg/newXg)
   toleranceInner = min(maxToleranceInner,solver.dt*goalCFL/cfl*maxChange)
 
-  if not solver.fixedTimeStep
+  if not solver.fixedTimeStep:
       scale = max(0.5,min(2.0,goalCFL/cfl))
       solver.dt *= scale
 
@@ -452,6 +465,6 @@ else:
 writeResults(outFile, solver)
 
 if(not converged):
-  exit(2)
+  exit(1)
 
 
