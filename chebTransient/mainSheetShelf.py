@@ -53,16 +53,20 @@ def computeBPoly(x,solver):
   
 def readResults(fileName, solver):
   print "reading from: ", fileName
+
   filePointer = open(fileName,'rb')
   Nx = numpy.fromfile(filePointer, dtype=int, count=1)[0]
   if(Nx != solver.Nx):
-    print "Bad Nx in file."
-    exit(1)
+     print "Bad Nx in file."
+     exit(1)
   
   solver.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
   solver.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
-#  if solver.writeToSeparateFile:
-#     solver.outputFileIndex = numpy.fromfile(filePointer, dtype=float, count=1)[0]  
+  if solver.writeToSeparateFile and not solver.initFromChebSteadyState:
+     print "Initializing from restart file"
+     solver.outputFileIndex = numpy.fromfile(filePointer, dtype=int, count=1)[0]  
+  else:
+     print "Initializing from initFromChebSteadyState"
   solver.H = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
   solver.updateH(solver.H,solver.xg)
   solver.u = numpy.fromfile(filePointer, dtype=float, count=2*Nx)
@@ -70,8 +74,10 @@ def readResults(fileName, solver):
   solver.ux[0:Nx] = numpy.dot(solver.cheb.Dx/solver.xg,solver.u[0:Nx])
   solver.ux[Nx:2*Nx] = numpy.dot(solver.cheb.Dx/(solver.xc-solver.xg),solver.u[Nx:2*Nx])
   filePointer.close()
-
+	
   writeResults(outFile, solver) 
+	
+        
 
 
 def writeResults(outFile, solver):
@@ -92,8 +98,9 @@ def writeResults(outFile, solver):
   time = numpy.array(solver.time)
   time.tofile(filePointer)
   if solver.writeToSeparateFile:
-     outputFileIndex = numpy.array(solver.outputFileIndex)
+     outputFileIndex = numpy.array(solver.outputFileIndex,int)
      outputFileIndex.tofile(filePointer)
+     print "outputFileIndex is %s"%(outputFileIndex)
   solver.H.tofile(filePointer)
   solver.u.tofile(filePointer)
   xSheet = solver.xg*solver.cheb.x
@@ -162,6 +169,7 @@ parser.add_option("--stepsPerWrite", type="int", default=10, dest="stepsPerWrite
 parser.add_option("--timeCentering", type="float", default=1.0, dest="timeCentering")
 parser.add_option("--transient", action="store_true", default=False, dest="transient")
 parser.add_option("--writeToSeparateFile", action="store_true", default=False, dest="writeToSeparateFile")
+parser.add_option("--initFromChebSteadyState", action="store_true", default=False, dest="initFromChebSteadyState")
 parser.add_option("--finalTime", type="float", default=500, dest="finalTime")
 parser.add_option("--fixedTimeStep", action="store_true", default=False, dest="fixedTimeStep")
 
@@ -221,8 +229,10 @@ solver.linearSlope = options.linearSlope
 solver.lambda_0 = options.lambda_0
 solver.m_0 = options.m_0
 solver.fixedTimeStep = options.fixedTimeStep
-#solver.stepsPerWrite = options.stepsPerWrite
+solver.timeCentering = options.timeCentering
+solver.stepsPerWrite = options.stepsPerWrite
 solver.writeToSeparateFile = options.writeToSeparateFile
+solver.initFromChebSteadyState = options.initFromChebSteadyState
 solver.finalTime = options.finalTime
 solver.meltRate = options.meltRate
 
@@ -276,10 +286,10 @@ if(options.inFile == "none" or options.inFile == "zero"):
     
   
   solver.updateH(HGuess,xgGuess)
-  
   solver.u = numpy.zeros(solver.H.shape)
   solver.ux = numpy.zeros(solver.H.shape)
   solver.oldH = solver.H
+  solver.oldU = solver.u
   solver.oldXg = solver.xg
 
   innerConverged = False
@@ -305,6 +315,7 @@ if(options.inFile == "none" or options.inFile == "zero"):
   
   # suggest a conservative estimate as the staring time step
   print "Suggested dt:", 0.25*options.goalCFL*(solver.xg/solver.Nx)/numpy.amax(numpy.abs(solver.u))
+
 else:
   if(not os.path.exists(options.inFile)):
     print "File not found:", options.inFile
@@ -315,6 +326,7 @@ if(maxSteps == 0):
   exit()
 
 solver.oldH = solver.H
+solver.oldU = solver.u
 solver.oldXg = solver.xg
 
 solver.dt = options.initDt
@@ -332,6 +344,8 @@ deltaX[(Nx+1)/2:] = solver.cheb.x[(Nx+1)/2:]-solver.cheb.x[(Nx-1)/2:-1]
 prev_dH_dt = numpy.zeros(solver.H.shape)
 prev_du_dt = numpy.zeros(solver.u.shape)
 #prev_dxg_dt = 0.
+prevHux = numpy.zero(solver.H.shape)
+oldUx - numpy.zero(solver.u.shape)
 
 toleranceInner = maxToleranceInner
 for outer in range(maxSteps):
@@ -339,7 +353,10 @@ for outer in range(maxSteps):
   solver.oldXg = solver.xg
   solver.oldU = solver.u
   
-  
+  oldUx[0:Nx] = numpy.dot(solver.cheb.Dx/solver.xg,solver.u[0:Nx])
+  oldUx[Nx:2*Nx] = numpy.dot(solver.cheb.Dx/(solver.xc-solver.xg),solver.u[Nx:2*Nx])
+  solver.prevHUx = numpy.dot(solver.H,oldUx)
+ 
   innerConverged = False
   
   # initial guess is that du/dt will be the same over this step
