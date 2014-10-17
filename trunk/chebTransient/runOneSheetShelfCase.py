@@ -43,6 +43,9 @@ if os.path.exists(filePointer):
   lines = [line.rstrip('\n') for line in open(filePointer)]
   if len(lines) > 0 and os.path.exists(lines[0]) and (os.stat(lines[0]).st_size > 0):
     restartFile=lines[0]
+    if commonArgs.count("--initFromChebSteadyState")>0:
+       print "removing initFromChebSteadyState argument"
+       commonArgs.remove("--initFromChebSteadyState")
     print "restarting from", restartFile
 if(restartFile == "none"):
   if os.path.exists(inputFile):

@@ -140,7 +140,7 @@ class SheetShelfSolver:
     xc = self.xc
     DxSheet = self.cheb.Dx/xg
     DxShelf = self.cheb.Dx/(xc-xg)
-    
+
     x = self.x
     
     Dx = numpy.zeros((2*Nx,2*Nx))
@@ -160,10 +160,13 @@ class SheetShelfSolver:
     meltRate = numpy.zeros(x.shape)
     meltRate[Nx:2*Nx] = self.meltRate
 
-    # dH/dt (u - sigma dxg_dt) Hx + ux H + (u - sigma dxg_dt) H Wx/W = a (in sheet)
+    # dH/dt + (u - sigma dxg_dt) Hx + ux H + (u - sigma dxg_dt) H Wx/W = a (in sheet)
     M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
     rhs = self.a - meltRate + self.oldH/self.dt
-    
+   
+  #  M =  numpy.diag(diag1) + numpy.dot(numpy.diag(self.u + movingGridTerm),Dx)
+  #  rhs = self.a - meltRate + self.oldH/self.dt - (1-self.timeCentering)*
+ 
 #    # have to replace a row to get continuity in H at xg
 #    M[Nx,:] = 0.
 #    M[Nx,Nx-1] = 1.
