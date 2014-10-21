@@ -203,7 +203,7 @@ class SheetShelfSolver:
     
     self.xg = numpy.fromfile(filePointer, dtype=float, count=1)[0]
     self.time = numpy.fromfile(filePointer, dtype=float, count=1)[0]
-    if self.writeToSeparateFiles and not self.initFromChebSteadyState:
+    if self.options.writeToSeparateFiles and not self.options.initFromChebSteadyState:
        print "Initializing from restart file"
        self.outputFileIndex = numpy.fromfile(filePointer, dtype=int, count=1)[0]  
     else:
@@ -215,7 +215,7 @@ class SheetShelfSolver:
     self.dxg_dt = numpy.fromfile(filePointer, dtype=float, count=1)[0]
     filePointer.close()
   	
-    solver.writeResults()
+    self.writeResults()
   
   def writeResults(self):
     if self.options.writeToSeparateFiles:
@@ -465,26 +465,29 @@ class SheetShelfSolver:
     self.u = ukp1
     self.ux = uxkp1
     
-  def newtonStepXg(self, newH):
-    Nx = self.options.Nx
-    # Newton's method to find the new xg
-    # xg^(k+1) = xg^k - f(xg^k)/f'(xg^k)
-    # f = Hf-H
-    f = self.Hf - newH[0:Nx]
-    fx_xg = numpy.dot(self.Dx[Nx-1,0:Nx],f)
-    newXg = self.xg - f[-1]/fx_xg
-    
-    return newXg
+#  def newtonStepXg(self, newH):
+#    Nx = self.options.Nx
+#    # Newton's method to find the new xg
+#    # xg^(k+1) = xg^k - f(xg^k)/f'(xg^k)
+#    # f = Hf-H
+#    #f = self.Hf - newH[0:Nx]
+#    (b,bx) = self.computeB(self.xg)
+#    Hf_xg = self.maxS(b)/(1-self.delta)
+#    Hfx_xg = bx/(1-self.delta)
+#    f_xg = Hf_xg - newH[Nx-1]
+#    fx_xg = Hfx_xg #numpy.dot(self.Dx[Nx-1,0:Nx],f)
+#    print newH[Nx-1], f_xg, fx_xg
+#    newXg = self.xg - f_xg/fx_xg
+#    
+#    return newXg
 
   def compute_dxg_dt(self):    
     Nx = self.options.Nx
-    a = self.a
+    a = self.options.a
     u = self.u[Nx]
     H = self.H[Nx]
     ux = self.ux[Nx]
     Hx = self.Hx[Nx]
-    Wx = self.Wx[Nx]
-    W = self.W[Nx]
     Hfx_xg = self.Hfx_xg
     
     # dH_dt = dHf_dt
@@ -493,12 +496,21 @@ class SheetShelfSolver:
     numerator = a - u*Hx - ux*H
     denominator = Hx - Hfx_xg
     if(self.options.useChannelWidth):
+      Wx = self.Wx[Nx]
+      W = self.W[Nx]
       numerator -= H*u*Wx/W
       denominator += H*Wx/W
     
     dxg_dt = -numerator/denominator
+    #print "dxg_dt:", dxg_dt
     return dxg_dt
-    
+
+  def iterateImplicitXg(self):
+    new_dxg_dt = self.compute_dxg_dt()
+    theta = self.options.timeCentering   
+    newXg = self.oldXg + self.dt*(theta*new_dxg_dt + (1.-theta)*self.old_dxg_dt)
+    #print "newXg:", newXg
+    return newXg
     
   def computeExplicit_dH_dt(self,dxg_dt): 
     Nx = self.options.Nx
@@ -580,13 +592,14 @@ class SheetShelfSolver:
     self.oldH = self.H
     self.oldU = self.u
     self.oldXg = self.xg
-    print self.dxg_dt
-    self.old_dH_dt = self.computeExplicit_dH_dt(self.dxg_dt)
+    self.old_dxg_dt = self.compute_dxg_dt()
+    self.old_dH_dt = self.computeExplicit_dH_dt(self.old_dxg_dt)
     innerConverged = False
-    
+        
     # initial guess is that du/dt will be the same over this step
     newH = self.iterateImplicitContinuity()
-    newXg = self.newtonStepXg(newH)
+    #newXg = self.newtonStepXg(newH)
+    newXg = self.iterateImplicitXg()
     self.updateHandXg(newH,newXg)
   
     for inner in range(self.options.maxInnerSteps):
@@ -594,10 +607,12 @@ class SheetShelfSolver:
       prevH = self.H
       self.iterateOnViscosity()
       newH = self.iterateImplicitContinuity()
-      newXg = self.newtonStepXg(newH)
+      #newXg = self.newtonStepXg(newH)
+      newXg = self.iterateImplicitXg()
+      
+      diffXg = numpy.abs(newXg-self.xg)/newXg
   
       diffH = numpy.amax(numpy.abs(newH-prevH))/numpy.amax(newH)
-      diffXg = numpy.abs(newXg-self.xg)/newXg
       self.updateHandXg(newH,newXg)
   
       diffU = numpy.amax(numpy.abs(prevU-self.u))/numpy.amax(numpy.abs(self.u))
@@ -610,7 +625,7 @@ class SheetShelfSolver:
       cflShelf = numpy.amax(numpy.abs(uEff/((xc-newXg)*self.deltaSigma)))*self.dt
       cfl = numpy.maximum(cflSheet,cflShelf)
       
-      print cflSheet, cflShelf
+      #print cflSheet, cflShelf
           
       if numpy.isnan(cfl):
         print "blew up!"
@@ -635,18 +650,18 @@ class SheetShelfSolver:
         plt.plot(x,self.prev_du_dt, 'm')
         plt.plot(x,dH_dt, 'b')
         plt.plot(x,du_dt, 'r')
-  
+        dH_dt_xg = dH_dt[Nx-1]
         dH_dt = numpy.amax(numpy.abs(dH_dt))
         ax = plt.subplot(2,3,1)
-        plt.title('iter: %02i dt=%.4g'%(inner, self.dt))
+        plt.title('time: %g iter: %02i dt=%.4g'%(self.time, inner, self.dt))
         ax = plt.subplot(2,3,2)
         plt.title('CFL=%.2f'%cfl)
         ax = plt.subplot(2,3,3)
         plt.title('diffU: %.4g tol.: %.4g'%(diffU, self.toleranceInner))
         ax = plt.subplot(2,3,4)
-        plt.title('xg=%.4f'%(newXg))
+        plt.title('xg=%.4f H(xg)-Hf(xg)=%.1e'%(newXg,newH[Nx-1]-self.Hf[Nx-1]))
         ax = plt.subplot(2,3,5)
-        plt.title('dxg/dt=%.4f'%(self.dxg_dt))
+        plt.title('dxg/dt=%.4f dH/dt|xg=%.4g'%(self.dxg_dt,dH_dt_xg))
         ax = plt.subplot(2,3,6)
         plt.title('|dH/dt|_max=%.4f'%(dH_dt))
         if(self.options.plotContinuous):
@@ -685,6 +700,7 @@ class SheetShelfSolver:
         self.dt *= scale
   
     print "time: ", self.time, "|dH_dt|_max: ", diffH, "dxg_dt:", self.dxg_dt, "dt: ", self.dt, "inner tol.:", self.toleranceInner
+    print 'H(xg)-Hf(xg)=%.1e'%(newH[Nx-1]-self.Hf[Nx-1])
     self.updateHandXg(newH,newXg)
    
     if self.time>=self.options.finalTime/self.tBar*self.sPerY:
